@@ -1,0 +1,1 @@
+{"name":"markdown-collab-editor","version":"1.0.0","type":"module","scripts":{"start":"node server/index.js","dev":"node server/index.js","reset-db":"node server/reset-db.js"},"dependencies":{"bcryptjs":"^2.4.3","dotenv":"^16.4.7","express":"^4.21.2","jsonwebtoken":"^9.0.2","marked":"^15.0.6","uuid":"^11.0.5","ws":"^8.18.0"},"devDependencies":{}}

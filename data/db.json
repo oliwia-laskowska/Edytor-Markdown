@@ -1,0 +1,47 @@
+{
+  "users": [
+    {
+      "id": "42645fe2-743d-498f-88a2-781366b24560",
+      "username": "admin",
+      "passwordHash": "$2a$10$yVjnAcJY8HqK8ZMeDB8SS.jPnim7TvmRf2WXe9SDVSlKL105KVSRm",
+      "role": "admin"
+    },
+    {
+      "id": "771af820-1a45-4776-8007-3bdedc0b3732",
+      "username": "student",
+      "passwordHash": "$2a$10$qxkhzNuX.SZ1pAUKfzmY2OT.G3e4c6/UhnjSdjMN.bEnstUwlakxi",
+      "role": "user"
+    },
+    {
+      "id": "f4aeab85-c5b1-4160-b630-c30612488246",
+      "username": "oliwia",
+      "passwordHash": "$2a$10$t2iabv3c/DOecDDz2yUd7ud61DT3m9GRIjIXX7kIEblHPAD8k71nO",
+      "role": "user"
+    },
+    {
+      "id": "6730cae8-57fe-49b8-b119-b7d3e2cc031a",
+      "username": "test",
+      "passwordHash": "$2a$10$4BFGE7iXS7KvcOQ8dMka1.lBzXCM5tk/vfJ6iafhdpM3kR4GZKJV2",
+      "role": "user"
+    }
+  ],
+  "documents": [
+    {
+      "id": "c08d4237-ef1b-40b0-ba7e-c6daf2509e35",
+      "title": "Demo",
+      "content": "# Demo",
+      "ownerId": "771af820-1a45-4776-8007-3bdedc0b3732",
+      "sharedWith": [],
+      "updatedAt": "2026-05-14T11:03:14.614Z"
+    },
+    {
+      "id": "bf9a7af3-bf15-44da-92ce-69b653028ce7",
+      "title": "Test",
+      "content": "test",
+      "ownerId": "6730cae8-57fe-49b8-b119-b7d3e2cc031a",
+      "sharedWith": [],
+      "updatedAt": "2026-05-14T11:05:35.862Z"
+    }
+  ],
+  "versions": []
+}
