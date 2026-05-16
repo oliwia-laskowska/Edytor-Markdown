@@ -1,111 +1,136 @@
-let token = localStorage.getItem('token'),
-    current = null;
+import { ApiClient } from './api.js';
+import { MarkdownEditor } from './editor.js';
+import { $, toast, formData, renderDocs } from './ui.js';
 
-const $ = s => document.querySelector(s),
-    msg = $('#msg');
+const api = new ApiClient();
+let user = null, docs = [], current = null, dirty = false;
 
-function show(t, ok = false) {
-    msg.className = 'alert mt-3 alert-' + (ok ? 'success' : 'danger');
-    msg.textContent = t;
+const editor = new MarkdownEditor($('#markdownInput'), $('#preview'));
+editor.onChange = () => { dirty = true };
+
+function showAuth() {
+    $('#authView').classList.remove('d-none');
+    $('#appView').classList.add('d-none');
+    $('#logoutBtn').classList.add('d-none');
+    $('#currentUser').textContent = '';
 }
 
-async function api(p, o = {}) {
-    const r = await fetch(p, {
-        ...o,
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token,
-            ...o.headers
-        }
+function showApp() {
+    $('#authView').classList.add('d-none');
+    $('#appView').classList.remove('d-none');
+    $('#logoutBtn').classList.remove('d-none');
+    $('#currentUser').textContent = user.username;
+}
+
+async function loadDocs() {
+    const data = await api.documents();
+    docs = data.documents;
+    renderDocs($('#docsList'), docs, current?.id);
+}
+
+async function openDoc(id) {
+    if (dirty && current) await saveDoc();
+    const data = await api.getDocument(id);
+    current = data.document;
+    dirty = false;
+    $('#titleInput').value = current.title;
+    editor.setValue(current.content);
+    renderDocs($('#docsList'), docs, current.id);
+}
+
+async function saveDoc() {
+    if (!current) return;
+    const data = await api.saveDocument(current.id, {
+        title: $('#titleInput').value,
+        content: editor.getValue()
     });
-
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.message || 'Błąd');
-    return d;
+    current = data.document;
+    dirty = false;
+    await loadDocs();
+    toast('Zapisano plik');
 }
 
-async function auth(path, form) {
-    const d = await api(path, {
-        method: 'POST',
-        body: JSON.stringify(Object.fromEntries(new FormData(form))),
-        headers: {
-            Authorization: ''
-        }
-    });
-    token = d.token;
-    localStorage.setItem('token', token);
-    boot();
+async function afterLogin(data) {
+    api.setToken(data.token);
+    user = data.user;
+    showApp();
+    await loadDocs();
 }
 
-async function load() {
-    const docs = await api('/api/documents');
-    $('#docs').innerHTML = '';
-    docs.forEach(d => {
-        const a = document.createElement('button');
-        a.className = 'list-group-item list-group-item-action';
-        a.textContent = d.title;
-        a.onclick = () => {
-            current = d;
-            $('#title').value = d.title;
-            $('#editor').value = d.content || '';
-        };
-        $('#docs').appendChild(a);
-    });
-}
-
-function boot() {
-    $('#auth').classList.toggle('hidden', !!token);
-    $('#app').classList.toggle('hidden', !token);
-    if (token) load().catch(e => show(e.message));
-}
-
-$('#login').addEventListener('submit', e => {
-    e.preventDefault();
-    auth('/api/login', e.target).catch(e => show(e.message));
+$('#showLoginBtn').addEventListener('click', () => {
+    $('#loginForm').classList.remove('d-none');
+    $('#registerForm').classList.add('d-none');
 });
 
-$('#register').addEventListener('submit', e => {
-    e.preventDefault();
-    auth('/api/register', e.target).catch(e => show(e.message));
+$('#showRegisterBtn').addEventListener('click', () => {
+    $('#registerForm').classList.remove('d-none');
+    $('#loginForm').classList.add('d-none');
 });
 
-$('#newDoc').addEventListener('submit', async e => {
+$('#loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     try {
-        current = await api('/api/documents', {
-            method: 'POST',
-            body: JSON.stringify({
-                title: new FormData(e.target).get('title')
-            })
-        });
-        e.target.reset();
-        await load();
-        show('Utworzono', true);
+        await afterLogin(await api.login(formData(e.target)));
     } catch (err) {
-        show(err.message);
+        $('#authError').textContent = err.message;
+        $('#authError').classList.remove('d-none');
     }
 });
 
-$('#save').onclick = () => current && api('/api/documents/' + current.id, {
-    method: 'PUT',
-    body: JSON.stringify({
-        content: $('#editor').value
-    })
-}).then(() => show('Zapisano', true)).catch(e => show(e.message));
+$('#registerForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+        await afterLogin(await api.register(formData(e.target)));
+    } catch (err) {
+        $('#authError').textContent = err.message;
+        $('#authError').classList.remove('d-none');
+    }
+});
 
-$('#delete').onclick = () => current && api('/api/documents/' + current.id, {
-    method: 'DELETE'
-}).then(() => {
+$('#logoutBtn').addEventListener('click', () => {
+    api.setToken('');
+    user = null;
     current = null;
-    $('#editor').value = '';
-    load();
-    show('Usunięto', true);
-}).catch(e => show(e.message));
+    showAuth();
+});
 
-$('#logout').onclick = () => {
-    localStorage.clear();
-    token = null;
-    boot();
-};
+$('#newDocForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+        const title = formData(e.target).title;
+        const data = await api.createDocument(title);
+        e.target.reset();
+        await loadDocs();
+        await openDoc(data.document.id);
+        toast('Utworzono plik');
+    } catch (err) {
+        toast(err.message);
+    }
+});
 
-boot();
+$('#docsList').addEventListener('click', e => {
+    const btn = e.target.closest('[data-id]');
+    if (btn) openDoc(btn.dataset.id);
+});
+
+$('#saveBtn').addEventListener('click', () => saveDoc().catch(err => toast(err.message)));
+
+$('#deleteBtn').addEventListener('click', async () => {
+    if (!current) return;
+    if (!confirm('Usunąć plik?')) return;
+    await api.deleteDocument(current.id);
+    current = null;
+    dirty = false;
+    $('#titleInput').value = '';
+    editor.setValue('');
+    await loadDocs();
+    toast('Usunięto plik');
+});
+
+api.me()
+    .then(d => {
+        user = d.user;
+        showApp();
+        loadDocs();
+    })
+    .catch(showAuth);

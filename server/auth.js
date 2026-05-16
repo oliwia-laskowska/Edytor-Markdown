@@ -1,35 +1,15 @@
 import jwt from 'jsonwebtoken';
-
-export function auth(req, res, next) {
-    const h = req.headers.authorization || '';
-    const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-
-    if (!token) {
-        return res.status(401).json({
-            message: 'Brak tokenu'
-        });
-    }
-
+import { store } from './store.js';
+const secret = process.env.JWT_SECRET || 'dev-secret';
+export function signToken(user) { return jwt.sign({ id: user.id }, secret, { expiresIn: '7d' }); }
+export function authMiddleware(req, res, next) {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret');
+        const payload = jwt.verify(token, secret);
+        const user = store.findUserById(payload.id);
+        if (!user) return res.status(401).json({ error: 'Brak autoryzacji.' });
+        req.user = store.publicUser(user);
         next();
-    } catch {
-        return res.status(401).json({
-            message: 'Nieprawidlowy token'
-        });
-    }
-}
-
-export function signUser(user) {
-    return jwt.sign(
-        {
-            id: user.id,
-            username: user.username,
-            role: user.role
-        },
-        process.env.JWT_SECRET || 'dev-secret',
-        {
-            expiresIn: '8h'
-        }
-    );
+    } catch { res.status(401).json({ error: 'Brak autoryzacji.' }); }
 }

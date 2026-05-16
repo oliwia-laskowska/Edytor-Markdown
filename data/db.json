@@ -1,47 +1,38 @@
 {
   "users": [
     {
-      "id": "42645fe2-743d-498f-88a2-781366b24560",
+      "id": "u-admin",
       "username": "admin",
-      "passwordHash": "$2a$10$yVjnAcJY8HqK8ZMeDB8SS.jPnim7TvmRf2WXe9SDVSlKL105KVSRm",
-      "role": "admin"
+      "email": "admin@example.com",
+      "password_hash": "$2a$10$etfz8RjbqHkEru.6dDwD3.2G5G9ZKOEbrXU21TJTDnd1xZKOzmjxy",
+      "role": "admin",
+      "created_at": "2026-05-16T18:32:23.061Z"
     },
     {
-      "id": "771af820-1a45-4776-8007-3bdedc0b3732",
+      "id": "u-student",
       "username": "student",
-      "passwordHash": "$2a$10$qxkhzNuX.SZ1pAUKfzmY2OT.G3e4c6/UhnjSdjMN.bEnstUwlakxi",
-      "role": "user"
-    },
-    {
-      "id": "f4aeab85-c5b1-4160-b630-c30612488246",
-      "username": "oliwia",
-      "passwordHash": "$2a$10$t2iabv3c/DOecDDz2yUd7ud61DT3m9GRIjIXX7kIEblHPAD8k71nO",
-      "role": "user"
-    },
-    {
-      "id": "6730cae8-57fe-49b8-b119-b7d3e2cc031a",
-      "username": "test",
-      "passwordHash": "$2a$10$4BFGE7iXS7KvcOQ8dMka1.lBzXCM5tk/vfJ6iafhdpM3kR4GZKJV2",
-      "role": "user"
+      "email": "student@example.com",
+      "password_hash": "$2a$10$CsOk9p/Nmlrdw/FU96Tjd.MSJ/vRPjrCk.rmbfCq2UXMTWUtKJxt6",
+      "role": "user",
+      "created_at": "2026-05-16T18:32:23.130Z"
     }
   ],
   "documents": [
     {
-      "id": "c08d4237-ef1b-40b0-ba7e-c6daf2509e35",
-      "title": "Demo",
-      "content": "# Demo",
-      "ownerId": "771af820-1a45-4776-8007-3bdedc0b3732",
-      "sharedWith": [],
-      "updatedAt": "2026-05-14T11:03:14.614Z"
+      "id": "9d5a2649-cdb5-4d24-8694-0bc2eb67a467",
+      "owner_id": "u-admin",
+      "title": "test3",
+      "content": "test test\ntest\n\ntest",
+      "created_at": "2026-05-16T18:34:00.806Z",
+      "updated_at": "2026-05-16T18:34:12.025Z"
     },
     {
-      "id": "bf9a7af3-bf15-44da-92ce-69b653028ce7",
-      "title": "Test",
+      "id": "242630ce-90ec-4e44-99a2-2daf9adb2542",
+      "owner_id": "u-admin",
+      "title": "test",
       "content": "test",
-      "ownerId": "6730cae8-57fe-49b8-b119-b7d3e2cc031a",
-      "sharedWith": [],
-      "updatedAt": "2026-05-14T11:05:35.862Z"
+      "created_at": "2026-05-16T18:33:43.026Z",
+      "updated_at": "2026-05-16T18:33:51.211Z"
     }
-  ],
-  "versions": []
+  ]
 }

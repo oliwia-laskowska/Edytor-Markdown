@@ -1,61 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projekt</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<main class="container py-4">
-    <h1>Projekt</h1>
 
-    <section id="auth" class="row g-3">
-        <article class="col-md-6">
-            <h2>Logowanie</h2>
-            <form id="login">
-                <input class="form-control mb-2" name="username" placeholder="login">
-                <input class="form-control mb-2" name="password" type="password" placeholder="hasło">
-                <button class="btn btn-primary">Zaloguj</button>
-            </form>
-        </article>
+<header class="navbar bg-dark navbar-dark px-3">
+    <span class="navbar-brand">Markdown Editor</span>
+    <span id="currentUser" class="text-light small ms-auto me-2"></span>
+    <button id="logoutBtn" class="btn btn-outline-light btn-sm d-none">Wyloguj</button>
+</header>
 
-        <article class="col-md-6">
-            <h2>Rejestracja</h2>
-            <form id="register">
-                <input class="form-control mb-2" name="username" placeholder="login">
-                <input class="form-control mb-2" name="password" type="password" placeholder="User123!">
-                <button class="btn btn-success">Zarejestruj</button>
-            </form>
+<main class="container-fluid py-3">
+    <!-- Widok Autoryzacji -->
+    <section id="authView" class="row justify-content-center">
+        <article class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="h4">Logowanie / rejestracja</h1>
+
+                    <div class="btn-group w-100 mb-3">
+                        <button id="showLoginBtn" class="btn btn-primary">Logowanie</button>
+                        <button id="showRegisterBtn" class="btn btn-outline-primary">Rejestracja</button>
+                    </div>
+
+                    <div id="authError" class="alert alert-danger d-none"></div>
+
+                    <form id="loginForm">
+                        <input class="form-control mb-2" name="login" placeholder="login lub email" required>
+                        <input class="form-control mb-2" name="password" type="password" placeholder="hasło" required>
+                        <button class="btn btn-primary w-100">Zaloguj</button>
+                        <p class="small text-muted mt-2">Demo: admin/Admin123! albo student/User123!</p>
+                    </form>
+
+                    <form id="registerForm" class="d-none">
+                        <input class="form-control mb-2" name="username" placeholder="nazwa użytkownika" required minlength="3">
+                        <input class="form-control mb-2" name="email" type="email" placeholder="email" required>
+                        <input class="form-control mb-2" name="password" type="password" placeholder="Min 6, duża litera, cyfra, znak specjalny" required pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}">
+                        <button class="btn btn-success w-100">Zarejestruj</button>
+                    </form>
+                </div>
+            </div>
         </article>
     </section>
 
-    <section id="app" class="hidden">
-        <button id="logout" class="btn btn-outline-secondary float-end">Wyloguj</button>
-        <form id="newDoc" class="input-group my-3">
-            <input class="form-control" name="title" placeholder="Tytuł">
-            <button class="btn btn-success">Utwórz</button>
-        </form>
+    <!-- Widok Aplikacji -->
+    <section id="appView" class="d-none app-grid">
+        <aside class="card">
+            <div class="card-body">
+                <h2 class="h5">Moje pliki</h2>
+                <form id="newDocForm" class="input-group input-group-sm mb-3">
+                    <input name="title" class="form-control" placeholder="Nazwa pliku" required minlength="2">
+                    <button class="btn btn-success">Dodaj</button>
+                </form>
+                <div id="docsList" class="list-group small"></div>
+            </div>
+        </aside>
 
-        <div class="row">
-            <aside class="col-md-4">
-                <h3>Dokumenty</h3>
-                <div id="docs" class="list-group"></div>
-            </aside>
-
-            <section class="col-md-8">
-                <input id="title" class="form-control mb-2" readonly>
-                <textarea id="editor" class="form-control editor"></textarea>
-                <button id="save" class="btn btn-primary mt-2">Zapisz</button>
-                <button id="delete" class="btn btn-danger mt-2">Usuń</button>
-            </section>
-        </div>
+        <section class="card">
+            <div class="card-header d-flex gap-2">
+                <input id="titleInput" class="form-control form-control-sm" placeholder="Tytuł">
+                <button id="saveBtn" class="btn btn-primary btn-sm">Zapisz</button>
+                <button id="deleteBtn" class="btn btn-outline-danger btn-sm">Usuń</button>
+            </div>
+            <div class="card-body editor-split">
+                <div>
+                    <label class="form-label">Markdown</label>
+                    <textarea id="markdownInput" class="form-control code-area"></textarea>
+                </div>
+                <article>
+                    <h2 class="h6">Podgląd HTML</h2>
+                    <div id="preview" class="preview border rounded p-3 bg-white"></div>
+                </article>
+            </div>
+        </section>
     </section>
-
-    <div id="msg" class="alert mt-3 hidden"></div>
 </main>
 
+<div id="toastBox" class="toast-box"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
