@@ -1,9 +1,11 @@
 import 'dotenv/config';
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { router } from './routes.js';
+import { attachWebSocket } from './ws.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,4 +16,6 @@ app.use(express.json({ limit: '2mb' }));
 app.use('/api', router);
 app.use(express.static(path.join(__dirname, '../client')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../client/index.html')));
-app.listen(PORT, () => console.log(`Etap 3: http://localhost:${PORT}`));
+const server=http.createServer(app);
+attachWebSocket(server);
+server.listen(PORT, () => console.log(`Etap 4 WebSocket: http://localhost:${PORT}`));

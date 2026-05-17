@@ -11,18 +11,17 @@
 
 <header class="navbar bg-dark navbar-dark px-3">
     <span class="navbar-brand">Markdown Editor</span>
+    <span id="connectionBadge" class="badge text-bg-secondary ms-2">offline</span>
     <span id="currentUser" class="text-light small ms-auto me-2"></span>
     <button id="logoutBtn" class="btn btn-outline-light btn-sm d-none">Wyloguj</button>
 </header>
 
 <main class="container-fluid py-3">
-    <!-- Widok Autoryzacji -->
     <section id="authView" class="row justify-content-center">
         <article class="col-12 col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h1 class="h4">Logowanie / rejestracja</h1>
-
                     <div class="btn-group w-100 mb-3">
                         <button id="showLoginBtn" class="btn btn-primary">Logowanie</button>
                         <button id="showRegisterBtn" class="btn btn-outline-primary">Rejestracja</button>
@@ -48,7 +47,6 @@
         </article>
     </section>
 
-    <!-- Widok Aplikacji -->
     <section id="appView" class="d-none app-grid">
         <aside class="card">
             <div class="card-body">
@@ -58,6 +56,9 @@
                     <button class="btn btn-success">Dodaj</button>
                 </form>
                 <div id="docsList" class="list-group small"></div>
+
+                <h3 class="h6 mt-3">Online w pliku</h3>
+                <ul id="onlineUsers" class="small mb-0"></ul>
             </div>
         </aside>
 

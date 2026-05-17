@@ -1,18 +1,46 @@
 import { ApiClient } from './api.js';
 import { MarkdownEditor } from './editor.js';
+import { RealtimeSocket } from './socket.js';
 import { $, toast, formData, renderDocs } from './ui.js';
 
 const api = new ApiClient();
-let user = null, docs = [], current = null, dirty = false;
+const socket = new RealtimeSocket(api);
+let user = null, docs = [], current = null, dirty = false, applyingRemote = false;
 
 const editor = new MarkdownEditor($('#markdownInput'), $('#preview'));
-editor.onChange = () => { dirty = true };
+editor.onChange = (value) => {
+    dirty = true;
+    if (!applyingRemote) socket.sendEdit(value);
+};
+
+socket.onStatus = (status) => {
+    $('#connectionBadge').textContent = status;
+    $('#connectionBadge').className = 'badge ms-2 ' + (status === 'online' ? 'text-bg-success' : 'text-bg-secondary');
+};
+
+socket.onRemoteEdit = (content, remoteUser) => {
+    applyingRemote = true;
+    editor.setValue(content);
+    applyingRemote = false;
+    dirty = false;
+    toast(`Zmiana od ${remoteUser.username}`);
+};
+
+socket.onPresence = (users) => {
+    $('#onlineUsers').innerHTML = '';
+    users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = u.username;
+        $('#onlineUsers').appendChild(li);
+    });
+};
 
 function showAuth() {
     $('#authView').classList.remove('d-none');
     $('#appView').classList.add('d-none');
     $('#logoutBtn').classList.add('d-none');
     $('#currentUser').textContent = '';
+    socket.close();
 }
 
 function showApp() {
@@ -20,6 +48,7 @@ function showApp() {
     $('#appView').classList.remove('d-none');
     $('#logoutBtn').classList.remove('d-none');
     $('#currentUser').textContent = user.username;
+    socket.connect();
 }
 
 async function loadDocs() {
@@ -36,6 +65,7 @@ async function openDoc(id) {
     $('#titleInput').value = current.title;
     editor.setValue(current.content);
     renderDocs($('#docsList'), docs, current.id);
+    socket.join(current.id);
 }
 
 async function saveDoc() {
@@ -121,6 +151,7 @@ $('#deleteBtn').addEventListener('click', async () => {
     await api.deleteDocument(current.id);
     current = null;
     dirty = false;
+    socket.documentId = null;
     $('#titleInput').value = '';
     editor.setValue('');
     await loadDocs();
