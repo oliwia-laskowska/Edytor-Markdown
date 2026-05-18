@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,6 @@
                         <button id="showLoginBtn" class="btn btn-primary">Logowanie</button>
                         <button id="showRegisterBtn" class="btn btn-outline-primary">Rejestracja</button>
                     </div>
-
                     <div id="authError" class="alert alert-danger d-none"></div>
 
                     <form id="loginForm">
@@ -47,7 +46,7 @@
         </article>
     </section>
 
-    <section id="appView" class="d-none app-grid">
+    <section id="appView" class="d-none app-grid app-grid-history">
         <aside class="card">
             <div class="card-body">
                 <h2 class="h5">Moje pliki</h2>
@@ -56,7 +55,6 @@
                     <button class="btn btn-success">Dodaj</button>
                 </form>
                 <div id="docsList" class="list-group small"></div>
-
                 <h3 class="h6 mt-3">Online w pliku</h3>
                 <ul id="onlineUsers" class="small mb-0"></ul>
             </div>
@@ -79,6 +77,17 @@
                 </article>
             </div>
         </section>
+
+        <aside class="card">
+            <div class="card-body">
+                <h2 class="h5">Historia wersji</h2>
+                <div class="d-flex gap-2 mb-2">
+                    <button id="undoBtn" class="btn btn-outline-secondary btn-sm">Undo</button>
+                    <button id="redoBtn" class="btn btn-outline-secondary btn-sm">Redo</button>
+                </div>
+                <div id="versionsList" class="list-group small"></div>
+            </div>
+        </aside>
     </section>
 </main>
 

@@ -30,6 +30,8 @@ export class MarkdownEditor {
 
     renderNow() {
         const value = this.textarea.value || '';
-        this.preview.innerHTML = window.marked ? marked.parse(value) : value.replace(/\n/g, '<br>');
+        this.preview.innerHTML = window.marked
+            ? marked.parse(value)
+            : value.replace(/\n/g, '<br>');
     }
 }

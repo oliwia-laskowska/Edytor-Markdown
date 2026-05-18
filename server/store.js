@@ -11,10 +11,20 @@ const id = () => crypto.randomUUID();
 
 function emptyDb() { return { users: [], documents: [] }; }
 function readDb() {
-    if (!fs.existsSync(dbPath)) { fs.mkdirSync(path.dirname(dbPath), { recursive: true }); fs.writeFileSync(dbPath, JSON.stringify(emptyDb(), null, 2)); }
-    return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    if (!fs.existsSync(dbPath)) {
+        fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+        fs.writeFileSync(dbPath, JSON.stringify(emptyDb(), null, 2));
+    }
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    db.users ||= [];
+    db.documents ||= [];
+    db.documents.forEach(d => { d.versions ||= []; });
+    return db;
 }
 function writeDb(db) { fs.writeFileSync(dbPath, JSON.stringify(db, null, 2)); }
+function versionFrom(doc, label = 'autosave') {
+    return { id: id(), title: doc.title, content: doc.content, label, created_at: now() };
+}
 
 export const store = {
     dbPath,
@@ -28,7 +38,31 @@ export const store = {
     createUser(data) { const db = readDb(); const user = { id: id(), username: data.username, email: data.email, password_hash: data.password_hash, role: data.role || 'user', created_at: now() }; db.users.push(user); writeDb(db); return user; },
     listDocuments(user) { return readDb().documents.filter(d => d.owner_id === user.id).map(d => ({ id: d.id, title: d.title, updated_at: d.updated_at })); },
     getDocument(docId) { return readDb().documents.find(d => d.id === docId); },
-    createDocument(ownerId, title, content = '') { const db = readDb(); const doc = { id: id(), owner_id: ownerId, title, content, created_at: now(), updated_at: now() }; db.documents.unshift(doc); writeDb(db); return doc; },
-    updateDocument(docId, data) { const db = readDb(); const doc = db.documents.find(d => d.id === docId); if (!doc) return null; doc.title = data.title ?? doc.title; doc.content = data.content ?? doc.content; doc.updated_at = now(); writeDb(db); return doc; },
+    createDocument(ownerId, title, content = '') {
+        const db = readDb();
+        const doc = { id: id(), owner_id: ownerId, title, content, versions: [], created_at: now(), updated_at: now() };
+        doc.versions.push(versionFrom(doc, 'utworzenie'));
+        db.documents.unshift(doc); writeDb(db); return doc;
+    },
+    updateDocument(docId, data, label = 'zapis') {
+        const db = readDb(); const doc = db.documents.find(d => d.id === docId); if (!doc) return null;
+        doc.versions ||= [];
+        const changed = (data.title !== undefined && data.title !== doc.title) || (data.content !== undefined && data.content !== doc.content);
+        doc.title = data.title ?? doc.title; doc.content = data.content ?? doc.content; doc.updated_at = now();
+        if (changed) doc.versions.unshift(versionFrom(doc, label));
+        doc.versions = doc.versions.slice(0, 30);
+        writeDb(db); return doc;
+    },
+    listVersions(docId) {
+        const doc = this.getDocument(docId); if (!doc) return [];
+        return (doc.versions || []).map(v => ({ id: v.id, title: v.title, label: v.label, created_at: v.created_at }));
+    },
+    restoreVersion(docId, versionId) {
+        const db = readDb(); const doc = db.documents.find(d => d.id === docId); if (!doc) return null;
+        const version = (doc.versions || []).find(v => v.id === versionId); if (!version) return null;
+        doc.title = version.title; doc.content = version.content; doc.updated_at = now();
+        doc.versions.unshift(versionFrom(doc, 'przywrócenie wersji'));
+        writeDb(db); return doc;
+    },
     deleteDocument(docId) { const db = readDb(); db.documents = db.documents.filter(d => d.id !== docId); writeDb(db); }
 };

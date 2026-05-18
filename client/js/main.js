@@ -5,12 +5,36 @@ import { $, toast, formData, renderDocs } from './ui.js';
 
 const api = new ApiClient();
 const socket = new RealtimeSocket(api);
-let user = null, docs = [], current = null, dirty = false, applyingRemote = false;
+
+let user = null,
+    docs = [],
+    current = null,
+    dirty = false,
+    applyingRemote = false;
+
+let undoStack = [],
+    redoStack = [],
+    lastSnapshot = '';
 
 const editor = new MarkdownEditor($('#markdownInput'), $('#preview'));
+
+function pushUndo(value) {
+    if (value !== lastSnapshot) {
+        undoStack.push(lastSnapshot);
+        if (undoStack.length > 50) {
+            undoStack.shift();
+        }
+        lastSnapshot = value;
+        redoStack = [];
+    }
+}
+
 editor.onChange = (value) => {
     dirty = true;
-    if (!applyingRemote) socket.sendEdit(value);
+    if (!applyingRemote) {
+        pushUndo(value);
+        socket.sendEdit(value);
+    }
 };
 
 socket.onStatus = (status) => {
@@ -21,6 +45,7 @@ socket.onStatus = (status) => {
 socket.onRemoteEdit = (content, remoteUser) => {
     applyingRemote = true;
     editor.setValue(content);
+    lastSnapshot = content;
     applyingRemote = false;
     dirty = false;
     toast(`Zmiana od ${remoteUser.username}`);
@@ -57,15 +82,36 @@ async function loadDocs() {
     renderDocs($('#docsList'), docs, current?.id);
 }
 
+async function loadVersions() {
+    const box = $('#versionsList');
+    box.innerHTML = '';
+    if (!current) return;
+
+    const data = await api.versions(current.id);
+    data.versions.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = 'list-group-item list-group-item-action';
+        btn.dataset.versionId = v.id;
+        btn.innerHTML = `<strong>${v.label || 'wersja'}</strong><br><span class="text-muted">${new Date(v.created_at).toLocaleString()}</span>`;
+        box.appendChild(btn);
+    });
+}
+
 async function openDoc(id) {
-    if (dirty && current) await saveDoc();
+    if (dirty && current) {
+        await saveDoc();
+    }
     const data = await api.getDocument(id);
     current = data.document;
     dirty = false;
+    undoStack = [];
+    redoStack = [];
+    lastSnapshot = current.content;
     $('#titleInput').value = current.title;
     editor.setValue(current.content);
     renderDocs($('#docsList'), docs, current.id);
     socket.join(current.id);
+    await loadVersions();
 }
 
 async function saveDoc() {
@@ -76,7 +122,9 @@ async function saveDoc() {
     });
     current = data.document;
     dirty = false;
+    lastSnapshot = current.content;
     await loadDocs();
+    await loadVersions();
     toast('Zapisano plik');
 }
 
@@ -140,7 +188,9 @@ $('#newDocForm').addEventListener('submit', async e => {
 
 $('#docsList').addEventListener('click', e => {
     const btn = e.target.closest('[data-id]');
-    if (btn) openDoc(btn.dataset.id);
+    if (btn) {
+        openDoc(btn.dataset.id);
+    }
 });
 
 $('#saveBtn').addEventListener('click', () => saveDoc().catch(err => toast(err.message)));
@@ -148,14 +198,55 @@ $('#saveBtn').addEventListener('click', () => saveDoc().catch(err => toast(err.m
 $('#deleteBtn').addEventListener('click', async () => {
     if (!current) return;
     if (!confirm('Usunąć plik?')) return;
+
     await api.deleteDocument(current.id);
     current = null;
     dirty = false;
     socket.documentId = null;
     $('#titleInput').value = '';
     editor.setValue('');
+    $('#versionsList').innerHTML = '';
     await loadDocs();
     toast('Usunięto plik');
+});
+
+$('#undoBtn').addEventListener('click', () => {
+    if (!undoStack.length) return;
+    redoStack.push(editor.getValue());
+    const value = undoStack.pop();
+    applyingRemote = true;
+    editor.setValue(value);
+    applyingRemote = false;
+    lastSnapshot = value;
+    dirty = true;
+    socket.sendEdit(value);
+});
+
+$('#redoBtn').addEventListener('click', () => {
+    if (!redoStack.length) return;
+    undoStack.push(editor.getValue());
+    const value = redoStack.pop();
+    applyingRemote = true;
+    editor.setValue(value);
+    applyingRemote = false;
+    lastSnapshot = value;
+    dirty = true;
+    socket.sendEdit(value);
+});
+
+$('#versionsList').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-version-id]');
+    if (!btn || !current) return;
+    if (!confirm('Przywrócić tę wersję?')) return;
+
+    const data = await api.restoreVersion(current.id, btn.dataset.versionId);
+    current = data.document;
+    $('#titleInput').value = current.title;
+    editor.setValue(current.content);
+    lastSnapshot = current.content;
+    dirty = false;
+    await loadVersions();
+    toast('Przywrócono wersję');
 });
 
 api.me()

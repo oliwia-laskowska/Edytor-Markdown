@@ -18,7 +18,9 @@ export class RealtimeSocket {
 
         this.ws.addEventListener('open', () => {
             this.onStatus?.('online');
-            if (this.documentId) this.join(this.documentId);
+            if (this.documentId) {
+                this.join(this.documentId);
+            }
         });
 
         this.ws.addEventListener('close', () => {
@@ -27,8 +29,12 @@ export class RealtimeSocket {
 
         this.ws.addEventListener('message', e => {
             const msg = JSON.parse(e.data);
-            if (msg.type === 'edit') this.onRemoteEdit?.(msg.content, msg.user);
-            if (msg.type === 'presence') this.onPresence?.(msg.users || []);
+            if (msg.type === 'edit') {
+                this.onRemoteEdit?.(msg.content, msg.user);
+            }
+            if (msg.type === 'presence') {
+                this.onPresence?.(msg.users || []);
+            }
         });
     }
 

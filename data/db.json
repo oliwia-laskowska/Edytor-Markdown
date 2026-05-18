@@ -19,12 +19,84 @@
   ],
   "documents": [
     {
-      "id": "88e1eab4-2099-41c4-b155-7d6500f1b21b",
+      "id": "52095086-fcde-4fdc-9a39-2f4e194c6e10",
       "owner_id": "u-admin",
       "title": "Test",
-      "content": "Test",
-      "created_at": "2026-05-17T11:18:17.894Z",
-      "updated_at": "2026-05-17T11:18:21.328Z"
+      "content": "test\n\nxyz",
+      "versions": [
+        {
+          "id": "b10cbcad-ef6e-449b-b815-281a8c995a69",
+          "title": "Test",
+          "content": "test\n\nxyz",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:41.190Z"
+        },
+        {
+          "id": "36fefa0b-aeb1-4d91-a9a8-b16a5ffdc0cb",
+          "title": "Test",
+          "content": "test\n\nxy",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:41.067Z"
+        },
+        {
+          "id": "177a29bd-d3dc-40e9-bbfa-98482f6caccf",
+          "title": "Test",
+          "content": "test\n\nx",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:40.935Z"
+        },
+        {
+          "id": "8781764e-0ac1-43a1-83ce-6ab4ebbd2ee7",
+          "title": "Test",
+          "content": "test\n\n",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:40.582Z"
+        },
+        {
+          "id": "44023703-59b2-4951-b2c1-e53120d899ca",
+          "title": "Test",
+          "content": "test\n",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:40.429Z"
+        },
+        {
+          "id": "e147b917-5032-4b12-b803-7eeb8792fe46",
+          "title": "Test",
+          "content": "test",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:37.901Z"
+        },
+        {
+          "id": "c379498f-52a3-4a9f-92b0-a90237fa002b",
+          "title": "Test",
+          "content": "tes",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:37.801Z"
+        },
+        {
+          "id": "fd2486c6-c32f-4326-b02f-80a828084aa9",
+          "title": "Test",
+          "content": "te",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:37.599Z"
+        },
+        {
+          "id": "61b0c660-fc94-4013-890e-b49b171b7e4d",
+          "title": "Test",
+          "content": "t",
+          "label": "zapis",
+          "created_at": "2026-05-18T12:27:37.484Z"
+        },
+        {
+          "id": "7910514a-0b1d-411d-9da7-23cb778af55a",
+          "title": "Test",
+          "content": "",
+          "label": "utworzenie",
+          "created_at": "2026-05-18T12:27:36.488Z"
+        }
+      ],
+      "created_at": "2026-05-18T12:27:36.488Z",
+      "updated_at": "2026-05-18T12:27:42.120Z"
     }
   ]
 }

@@ -24,7 +24,10 @@ export class ApiClient {
 
         const data = await res.json().catch(() => ({}));
 
-        if (!res.ok) throw new Error(data.error || 'Błąd serwera');
+        if (!res.ok) {
+            throw new Error(data.error || 'Błąd serwera');
+        }
+
         return data;
     }
 
@@ -71,6 +74,16 @@ export class ApiClient {
     deleteDocument(id) {
         return this.request(`/documents/${id}`, {
             method: 'DELETE'
+        });
+    }
+
+    versions(id) {
+        return this.request(`/documents/${id}/versions`);
+    }
+
+    restoreVersion(id, versionId) {
+        return this.request(`/documents/${id}/versions/${versionId}/restore`, {
+            method: 'POST'
         });
     }
 }
