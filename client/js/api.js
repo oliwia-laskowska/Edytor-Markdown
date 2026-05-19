@@ -3,28 +3,31 @@ export class ApiClient {
         this.token = localStorage.getItem('token') || '';
     }
 
-    setToken(t) {
-        this.token = t || '';
-        if (t) {
-            localStorage.setItem('token', t);
+    setToken(token) {
+        this.token = token || '';
+
+        if (token) {
+            localStorage.setItem('token', token);
         } else {
             localStorage.removeItem('token');
         }
     }
 
     async request(path, options = {}) {
-        const res = await fetch('/api' + path, {
+        const response = await fetch(`/api${path}`, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+                ...(this.token
+                    ? { Authorization: `Bearer ${this.token}` }
+                    : {}),
                 ...(options.headers || {})
             }
         });
 
-        const data = await res.json().catch(() => ({}));
+        const data = await response.json().catch(() => ({}));
 
-        if (!res.ok) {
+        if (!response.ok) {
             throw new Error(data.error || 'Błąd serwera');
         }
 
@@ -47,6 +50,16 @@ export class ApiClient {
 
     me() {
         return this.request('/me');
+    }
+
+    users() {
+        return this.request('/users');
+    }
+
+    makeAdmin(id) {
+        return this.request(`/users/${id}/admin`, {
+            method: 'POST'
+        });
     }
 
     documents() {
@@ -82,8 +95,24 @@ export class ApiClient {
     }
 
     restoreVersion(id, versionId) {
-        return this.request(`/documents/${id}/versions/${versionId}/restore`, {
-            method: 'POST'
+        return this.request(
+            `/documents/${id}/versions/${versionId}/restore`,
+            {
+                method: 'POST'
+            }
+        );
+    }
+
+    shareDocument(id, login) {
+        return this.request(`/documents/${id}/share`, {
+            method: 'POST',
+            body: JSON.stringify({ login })
+        });
+    }
+
+    unshareDocument(id, userId) {
+        return this.request(`/documents/${id}/share/${userId}`, {
+            method: 'DELETE'
         });
     }
 }

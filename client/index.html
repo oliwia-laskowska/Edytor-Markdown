@@ -1,14 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projekt</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Markdown</title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    >
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
 
+<body>
 <header class="navbar bg-dark navbar-dark px-3">
     <span class="navbar-brand">Markdown Editor</span>
     <span id="connectionBadge" class="badge text-bg-secondary ms-2">offline</span>
@@ -22,23 +26,63 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h1 class="h4">Logowanie / rejestracja</h1>
+
                     <div class="btn-group w-100 mb-3">
                         <button id="showLoginBtn" class="btn btn-primary">Logowanie</button>
                         <button id="showRegisterBtn" class="btn btn-outline-primary">Rejestracja</button>
                     </div>
+
                     <div id="authError" class="alert alert-danger d-none"></div>
 
                     <form id="loginForm">
-                        <input class="form-control mb-2" name="login" placeholder="login lub email" required>
-                        <input class="form-control mb-2" name="password" type="password" placeholder="hasło" required>
+                        <input
+                                class="form-control mb-2"
+                                name="login"
+                                placeholder="login lub email"
+                                required
+                        >
+
+                        <input
+                                class="form-control mb-2"
+                                name="password"
+                                type="password"
+                                placeholder="hasło"
+                                required
+                        >
+
                         <button class="btn btn-primary w-100">Zaloguj</button>
-                        <p class="small text-muted mt-2">Demo: admin/Admin123! albo student/User123!</p>
+
+                        <p class="small text-muted mt-2">
+                            Demo: admin/Admin123! albo student/User123!
+                        </p>
                     </form>
 
                     <form id="registerForm" class="d-none">
-                        <input class="form-control mb-2" name="username" placeholder="nazwa użytkownika" required minlength="3">
-                        <input class="form-control mb-2" name="email" type="email" placeholder="email" required>
-                        <input class="form-control mb-2" name="password" type="password" placeholder="Min 6, duża litera, cyfra, znak specjalny" required pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}">
+                        <input
+                                class="form-control mb-2"
+                                name="username"
+                                placeholder="nazwa użytkownika"
+                                required
+                                minlength="3"
+                        >
+
+                        <input
+                                class="form-control mb-2"
+                                name="email"
+                                type="email"
+                                placeholder="email"
+                                required
+                        >
+
+                        <input
+                                class="form-control mb-2"
+                                name="password"
+                                type="password"
+                                placeholder="Min 6, duża litera, cyfra, znak specjalny"
+                                required
+                                pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}"
+                        >
+
                         <button class="btn btn-success w-100">Zarejestruj</button>
                     </form>
                 </div>
@@ -50,11 +94,24 @@
         <aside class="card">
             <div class="card-body">
                 <h2 class="h5">Moje pliki</h2>
+
                 <form id="newDocForm" class="input-group input-group-sm mb-3">
-                    <input name="title" class="form-control" placeholder="Nazwa pliku" required minlength="2">
+                    <input
+                            name="title"
+                            class="form-control"
+                            placeholder="Nazwa pliku"
+                            required
+                            minlength="2"
+                    >
                     <button class="btn btn-success">Dodaj</button>
                 </form>
+
+                <h3 class="h6">Moje pliki</h3>
                 <div id="docsList" class="list-group small"></div>
+
+                <h3 class="h6 mt-3">Udostępnione mi</h3>
+                <div id="sharedDocsList" class="list-group small"></div>
+
                 <h3 class="h6 mt-3">Online w pliku</h3>
                 <ul id="onlineUsers" class="small mb-0"></ul>
             </div>
@@ -66,11 +123,13 @@
                 <button id="saveBtn" class="btn btn-primary btn-sm">Zapisz</button>
                 <button id="deleteBtn" class="btn btn-outline-danger btn-sm">Usuń</button>
             </div>
+
             <div class="card-body editor-split">
                 <div>
                     <label class="form-label">Markdown</label>
                     <textarea id="markdownInput" class="form-control code-area"></textarea>
                 </div>
+
                 <article>
                     <h2 class="h6">Podgląd HTML</h2>
                     <div id="preview" class="preview border rounded p-3 bg-white"></div>
@@ -80,11 +139,29 @@
 
         <aside class="card">
             <div class="card-body">
+                <section id="permissionsPanel" class="mb-3">
+                    <h2 class="h5">Dostęp</h2>
+
+                    <form id="shareForm" class="input-group input-group-sm mb-2">
+                        <input name="login" class="form-control" placeholder="login lub email">
+                        <button class="btn btn-success">Nadaj</button>
+                    </form>
+
+                    <div id="sharedUsersList" class="list-group small"></div>
+                </section>
+
+                <section id="adminPanel" class="mb-3 d-none">
+                    <h2 class="h5">Panel admina</h2>
+                    <div id="usersList" class="list-group small"></div>
+                </section>
+
                 <h2 class="h5">Historia wersji</h2>
+
                 <div class="d-flex gap-2 mb-2">
                     <button id="undoBtn" class="btn btn-outline-secondary btn-sm">Undo</button>
                     <button id="redoBtn" class="btn btn-outline-secondary btn-sm">Redo</button>
                 </div>
+
                 <div id="versionsList" class="list-group small"></div>
             </div>
         </aside>

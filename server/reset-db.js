@@ -5,4 +5,4 @@ const users = [
     { id: 'u-student', username: 'student', email: 'student@example.com', password_hash: await bcrypt.hash('User123!', 10), role: 'user', created_at: new Date().toISOString() }
 ];
 store.writeDb({ users, documents: [] });
-console.log('Zresetowano dane projekt-etap-5.');
+console.log('Zresetowano dane projekt-etap-6.');

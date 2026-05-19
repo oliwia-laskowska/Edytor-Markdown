@@ -15,13 +15,13 @@ export function attachWebSocket(server){
         ws.on('message',raw=>{
             let msg; try{msg=JSON.parse(raw)}catch{return}
             if(msg.type==='join'){
-                const doc=store.getDocument(msg.documentId); if(!doc||doc.owner_id!==ws.user.id){send(ws,{type:'error',message:'Brak dostępu do dokumentu'});return}
+                const doc=store.getDocument(msg.documentId); if(!store.canAccess(doc,ws.user)){send(ws,{type:'error',message:'Brak dostępu do dokumentu'});return}
                 if(ws.documentId) room(ws.documentId).delete(ws);
                 ws.documentId=msg.documentId; room(ws.documentId).add(ws); presence(ws.documentId); return;
             }
             if(msg.type==='edit' && ws.documentId){
-                const doc=store.getDocument(ws.documentId); if(!doc||doc.owner_id!==ws.user.id)return;
-                store.updateDocument(ws.documentId,{content:String(msg.content||''),title:doc.title});
+                const doc=store.getDocument(ws.documentId); if(!store.canAccess(doc,ws.user))return;
+                store.updateDocument(ws.documentId,{content:String(msg.content||''),title:doc.title},'edycja realtime');
                 broadcast(ws.documentId,{type:'edit',content:String(msg.content||''),user:ws.user},ws);
             }
         });

@@ -19,11 +19,185 @@
   ],
   "documents": [
     {
+      "id": "6e93bbff-c580-4b6e-a188-bac79a51253a",
+      "owner_id": "u-student",
+      "title": "Udostępnianie",
+      "content": "Test \nddfd",
+      "shared_with": [
+        "u-admin"
+      ],
+      "versions": [
+        {
+          "id": "4930e367-a492-4feb-884f-cd812d1537aa",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:25.381Z"
+        },
+        {
+          "id": "59cd86d2-ce97-4a69-8c7c-c174e89c9277",
+          "title": "Udostępnianie",
+          "content": "Test \nddf",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:25.093Z"
+        },
+        {
+          "id": "4e8d7fef-ee74-4938-9f1f-cb0ae8a52ca8",
+          "title": "Udostępnianie",
+          "content": "Test \ndd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:25.070Z"
+        },
+        {
+          "id": "66c0dab9-1b54-493c-ab1f-65412623d544",
+          "title": "Udostępnianie",
+          "content": "Test \nd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:24.474Z"
+        },
+        {
+          "id": "368f1f7f-878d-48de-a720-a2835b1438dc",
+          "title": "Udostępnianie",
+          "content": "Test \n",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:24.135Z"
+        },
+        {
+          "id": "722a24e6-5393-43d5-8d69-73ff23c7063e",
+          "title": "Udostępnianie",
+          "content": "Test ",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:15.089Z"
+        },
+        {
+          "id": "09407299-b969-464a-93f9-1d5442d3a0e6",
+          "title": "Udostępnianie",
+          "content": "Test",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:14.846Z"
+        },
+        {
+          "id": "fc5b0e64-ebb8-47b6-81e7-f23f6ba04321",
+          "title": "Udostępnianie",
+          "content": "Tes",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:14.696Z"
+        },
+        {
+          "id": "a17b097b-ef2c-41ea-92b3-e008b8765567",
+          "title": "Udostępnianie",
+          "content": "Te",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:14.469Z"
+        },
+        {
+          "id": "7521e7a7-bf8b-40ea-84e5-b820882689eb",
+          "title": "Udostępnianie",
+          "content": "T",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:14.211Z"
+        },
+        {
+          "id": "79c780bb-a5c1-4cc2-80d8-9c9ca56c8786",
+          "title": "Udostępnianie",
+          "content": "dzięki",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:03.491Z"
+        },
+        {
+          "id": "91a57821-719a-4d20-8cce-916c13bf8746",
+          "title": "Udostępnianie",
+          "content": "dzięk",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:03.348Z"
+        },
+        {
+          "id": "825177f4-d768-4017-a6c5-8f9ddadde563",
+          "title": "Udostępnianie",
+          "content": "dzię",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:03.184Z"
+        },
+        {
+          "id": "13c1668a-604a-43be-87eb-62e37afec474",
+          "title": "Udostępnianie",
+          "content": "dzi",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:02.907Z"
+        },
+        {
+          "id": "2aa1c380-6b47-42e3-ab31-abae7c8a7031",
+          "title": "Udostępnianie",
+          "content": "dz",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:02.770Z"
+        },
+        {
+          "id": "dde7b13c-aef6-4141-9644-d386f70bc607",
+          "title": "Udostępnianie",
+          "content": "d",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T13:34:02.425Z"
+        },
+        {
+          "id": "c6ff3dd9-df08-471a-a0d8-3970b39c3424",
+          "title": "Udostępnianie",
+          "content": "",
+          "label": "utworzenie",
+          "created_at": "2026-05-19T13:33:24.864Z"
+        }
+      ],
+      "created_at": "2026-05-19T13:33:24.864Z",
+      "updated_at": "2026-05-19T13:34:39.483Z"
+    },
+    {
       "id": "52095086-fcde-4fdc-9a39-2f4e194c6e10",
       "owner_id": "u-admin",
       "title": "Test",
-      "content": "test\n\nxyz",
+      "content": "test\n\nxyz\nxz\nsd",
       "versions": [
+        {
+          "id": "24264c24-3136-4b7d-ae1c-f27587355638",
+          "title": "Test",
+          "content": "test\n\nxyz\nxz\nsd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:37.486Z"
+        },
+        {
+          "id": "5227e478-0649-485e-b30d-0156fd296266",
+          "title": "Test",
+          "content": "test\n\nxyz\nxz\ns",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:37.223Z"
+        },
+        {
+          "id": "e6f8cdb0-0679-4e78-9c46-99b845a0c25c",
+          "title": "Test",
+          "content": "test\n\nxyz\nxz\n",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:36.989Z"
+        },
+        {
+          "id": "8fb73207-2843-4102-9410-62433d97b8ab",
+          "title": "Test",
+          "content": "test\n\nxyz\nxz",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:36.490Z"
+        },
+        {
+          "id": "7f8e0d86-793e-4cf8-974d-2ea47e706354",
+          "title": "Test",
+          "content": "test\n\nxyz\nx",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:36.204Z"
+        },
+        {
+          "id": "29c7612e-646c-4597-b3ae-cf0ad99b6ab5",
+          "title": "Test",
+          "content": "test\n\nxyz\n",
+          "label": "edycja realtime",
+          "created_at": "2026-05-18T13:17:35.832Z"
+        },
         {
           "id": "b10cbcad-ef6e-449b-b815-281a8c995a69",
           "title": "Test",
@@ -96,7 +270,10 @@
         }
       ],
       "created_at": "2026-05-18T12:27:36.488Z",
-      "updated_at": "2026-05-18T12:27:42.120Z"
+      "updated_at": "2026-05-18T13:17:38.335Z",
+      "shared_with": [
+        "u-student"
+      ]
     }
   ]
 }
