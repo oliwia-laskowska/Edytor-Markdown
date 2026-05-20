@@ -5,7 +5,7 @@ import {
     $,
     toast,
     formData,
-    renderDocs
+    renderDocs,
 } from './ui.js';
 
 const api = new ApiClient();
@@ -14,7 +14,7 @@ const socket = new RealtimeSocket(api);
 let user = null;
 let docs = {
     own: [],
-    shared: []
+    shared: [],
 };
 
 let current = null;
@@ -25,6 +25,10 @@ let canManage = false;
 let undoStack = [];
 let redoStack = [];
 let lastSnapshot = '';
+
+let websocketOfflineToastShown = false;
+
+const offlineQueueKey = 'offline-edits-v1';
 
 const editor = new MarkdownEditor(
     $('#markdownInput'),
@@ -61,12 +65,30 @@ socket.onStatus = (status) => {
         (status === 'online'
             ? 'text-bg-success'
             : 'text-bg-secondary');
+
+    if (status === 'online') {
+        websocketOfflineToastShown = false;
+
+        flushOfflineQueue().catch((err) =>
+            toast(err.message)
+        );
+    } else if (
+        current &&
+        !websocketOfflineToastShown
+    ) {
+        websocketOfflineToastShown = true;
+
+        toast(
+            'WebSocket offline — zmiany będą zapisane lokalnie'
+        );
+    }
 };
 
 socket.onRemoteEdit = (content, remoteUser) => {
     applyingRemote = true;
 
     editor.setValue(content);
+
     lastSnapshot = content;
 
     applyingRemote = false;
@@ -87,11 +109,71 @@ socket.onPresence = (users) => {
     });
 };
 
+socket.onOfflineEdit = (documentId, content) => {
+    if (!documentId) return;
+
+    queueOfflineEdit(documentId, content);
+};
+
+function readOfflineQueue() {
+    try {
+        return JSON.parse(
+            localStorage.getItem(offlineQueueKey) || '[]'
+        );
+    } catch {
+        return [];
+    }
+}
+
+function writeOfflineQueue(queue) {
+    localStorage.setItem(
+        offlineQueueKey,
+        JSON.stringify(queue)
+    );
+}
+
+function queueOfflineEdit(documentId, content) {
+    const queue = readOfflineQueue().filter(
+        (item) => item.documentId !== documentId
+    );
+
+    queue.push({
+        documentId,
+        content,
+        title:
+            $('#titleInput').value || 'Dokument',
+        createdAt: new Date().toISOString(),
+    });
+
+    writeOfflineQueue(queue);
+}
+
+async function flushOfflineQueue() {
+    const queue = readOfflineQueue();
+
+    if (!queue.length) return;
+
+    for (const item of queue) {
+        await api.saveDocument(item.documentId, {
+            title: item.title,
+            content: item.content,
+        });
+    }
+
+    writeOfflineQueue([]);
+
+    await loadDocs();
+
+    toast('Zsynchronizowano zmiany offline');
+}
+
 function showAuth() {
     $('#authView').classList.remove('d-none');
+
     $('#appView').classList.add('d-none');
 
     $('#logoutBtn').classList.add('d-none');
+
     $('#currentUser').textContent = '';
 
     socket.close();
@@ -99,6 +181,7 @@ function showAuth() {
 
 function showApp() {
     $('#authView').classList.add('d-none');
+
     $('#appView').classList.remove('d-none');
 
     $('#logoutBtn').classList.remove('d-none');
@@ -133,9 +216,7 @@ async function loadDocs() {
 }
 
 async function loadUsers() {
-    if (user?.role !== 'admin') {
-        return;
-    }
+    if (user?.role !== 'admin') return;
 
     const box = $('#usersList');
 
@@ -163,6 +244,7 @@ async function loadUsers() {
                 'btn btn-outline-primary btn-sm';
 
             button.textContent = 'Uczyń adminem';
+
             button.dataset.adminId = u.id;
 
             row.appendChild(button);
@@ -186,12 +268,14 @@ function renderSharedUsers(users = []) {
         row.innerHTML = `<span>${u.username}</span>`;
 
         if (canManage) {
-            const button = document.createElement('button');
+            const button =
+                document.createElement('button');
 
             button.className =
                 'btn btn-outline-danger btn-sm';
 
             button.textContent = 'Odbierz';
+
             button.dataset.unshareId = u.id;
 
             row.appendChild(button);
@@ -211,14 +295,13 @@ async function loadVersions() {
 
     box.innerHTML = '';
 
-    if (!current) {
-        return;
-    }
+    if (!current) return;
 
     const data = await api.versions(current.id);
 
     data.versions.forEach((v) => {
-        const button = document.createElement('button');
+        const button =
+            document.createElement('button');
 
         button.className =
             'list-group-item list-group-item-action';
@@ -226,7 +309,8 @@ async function loadVersions() {
         button.dataset.versionId = v.id;
 
         button.innerHTML = `
-      <strong>${v.label || 'wersja'}</strong><br>
+      <strong>${v.label || 'wersja'}</strong>
+      <br>
       <span class="text-muted">
         ${new Date(v.created_at).toLocaleString()}
       </span>
@@ -244,6 +328,7 @@ async function openDoc(id) {
     const data = await api.getDocument(id);
 
     current = data.document;
+
     canManage = !!data.canManage;
 
     dirty = false;
@@ -273,25 +358,41 @@ async function openDoc(id) {
 
     renderSharedUsers(data.sharedUsers || []);
 
+    const local = readOfflineQueue().find(
+        (item) => item.documentId === current.id
+    );
+
+    if (
+        local &&
+        confirm(
+            'Znaleziono lokalne zmiany offline dla tego pliku. Przywrócić je w edytorze?'
+        )
+    ) {
+        editor.setValue(local.content);
+
+        dirty = true;
+
+        lastSnapshot = local.content;
+    }
+
     await loadVersions();
 }
 
 async function saveDoc() {
-    if (!current) {
-        return;
-    }
+    if (!current) return;
 
     const data = await api.saveDocument(
         current.id,
         {
             title: $('#titleInput').value,
-            content: editor.getValue()
+            content: editor.getValue(),
         }
     );
 
     current = data.document;
 
     dirty = false;
+
     lastSnapshot = current.content;
 
     await loadDocs();
@@ -314,16 +415,26 @@ async function afterLogin(data) {
 $('#showLoginBtn').addEventListener(
     'click',
     () => {
-        $('#loginForm').classList.remove('d-none');
-        $('#registerForm').classList.add('d-none');
+        $('#loginForm').classList.remove(
+            'd-none'
+        );
+
+        $('#registerForm').classList.add(
+            'd-none'
+        );
     }
 );
 
 $('#showRegisterBtn').addEventListener(
     'click',
     () => {
-        $('#registerForm').classList.remove('d-none');
-        $('#loginForm').classList.add('d-none');
+        $('#registerForm').classList.remove(
+            'd-none'
+        );
+
+        $('#loginForm').classList.add(
+            'd-none'
+        );
     }
 );
 
@@ -333,15 +444,16 @@ $('#loginForm').addEventListener(
         e.preventDefault();
 
         try {
-            const data = await api.login(
-                formData(e.target)
+            await afterLogin(
+                await api.login(formData(e.target))
             );
-
-            await afterLogin(data);
         } catch (err) {
-            $('#authError').textContent = err.message;
+            $('#authError').textContent =
+                err.message;
 
-            $('#authError').classList.remove('d-none');
+            $('#authError').classList.remove(
+                'd-none'
+            );
         }
     }
 );
@@ -352,15 +464,16 @@ $('#registerForm').addEventListener(
         e.preventDefault();
 
         try {
-            const data = await api.register(
-                formData(e.target)
+            await afterLogin(
+                await api.register(formData(e.target))
             );
-
-            await afterLogin(data);
         } catch (err) {
-            $('#authError').textContent = err.message;
+            $('#authError').textContent =
+                err.message;
 
-            $('#authError').classList.remove('d-none');
+            $('#authError').classList.remove(
+                'd-none'
+            );
         }
     }
 );
@@ -385,11 +498,13 @@ $('#newDocForm').addEventListener(
         try {
             const title = formData(e.target).title;
 
-            const data = await api.createDocument(title);
+            const data =
+                await api.createDocument(title);
 
             e.target.reset();
 
             await loadDocs();
+
             await openDoc(data.document.id);
 
             toast('Utworzono plik');
@@ -402,7 +517,8 @@ $('#newDocForm').addEventListener(
 $('#docsList').addEventListener(
     'click',
     (e) => {
-        const button = e.target.closest('[data-id]');
+        const button =
+            e.target.closest('[data-id]');
 
         if (button) {
             openDoc(button.dataset.id);
@@ -413,7 +529,8 @@ $('#docsList').addEventListener(
 $('#sharedDocsList').addEventListener(
     'click',
     (e) => {
-        const button = e.target.closest('[data-id]');
+        const button =
+            e.target.closest('[data-id]');
 
         if (button) {
             openDoc(button.dataset.id);
@@ -424,21 +541,21 @@ $('#sharedDocsList').addEventListener(
 $('#saveBtn').addEventListener(
     'click',
     () => {
-        saveDoc().catch((err) => {
-            toast(err.message);
-        });
+        saveDoc().catch((err) =>
+            toast(err.message)
+        );
     }
 );
 
 $('#deleteBtn').addEventListener(
     'click',
     async () => {
-        if (!current) {
-            return;
-        }
+        if (!current) return;
 
         if (!canManage) {
-            return toast('Nie możesz usunąć tego pliku');
+            return toast(
+                'Nie możesz usunąć tego pliku'
+            );
         }
 
         if (!confirm('Usunąć plik?')) {
@@ -450,6 +567,8 @@ $('#deleteBtn').addEventListener(
         current = null;
         dirty = false;
 
+        websocketOfflineToastShown = false;
+
         socket.documentId = null;
 
         $('#titleInput').value = '';
@@ -457,6 +576,7 @@ $('#deleteBtn').addEventListener(
         editor.setValue('');
 
         $('#versionsList').innerHTML = '';
+
         $('#sharedUsersList').innerHTML = '';
 
         await loadDocs();
@@ -468,9 +588,7 @@ $('#deleteBtn').addEventListener(
 $('#undoBtn').addEventListener(
     'click',
     () => {
-        if (!undoStack.length) {
-            return;
-        }
+        if (!undoStack.length) return;
 
         redoStack.push(editor.getValue());
 
@@ -483,6 +601,7 @@ $('#undoBtn').addEventListener(
         applyingRemote = false;
 
         lastSnapshot = value;
+
         dirty = true;
 
         socket.sendEdit(value);
@@ -492,9 +611,7 @@ $('#undoBtn').addEventListener(
 $('#redoBtn').addEventListener(
     'click',
     () => {
-        if (!redoStack.length) {
-            return;
-        }
+        if (!redoStack.length) return;
 
         undoStack.push(editor.getValue());
 
@@ -507,6 +624,7 @@ $('#redoBtn').addEventListener(
         applyingRemote = false;
 
         lastSnapshot = value;
+
         dirty = true;
 
         socket.sendEdit(value);
@@ -520,26 +638,29 @@ $('#versionsList').addEventListener(
             '[data-version-id]'
         );
 
-        if (!button || !current) {
+        if (!button || !current) return;
+
+        if (
+            !confirm('Przywrócić tę wersję?')
+        ) {
             return;
         }
 
-        if (!confirm('Przywrócić tę wersję?')) {
-            return;
-        }
-
-        const data = await api.restoreVersion(
-            current.id,
-            button.dataset.versionId
-        );
+        const data =
+            await api.restoreVersion(
+                current.id,
+                button.dataset.versionId
+            );
 
         current = data.document;
 
-        $('#titleInput').value = current.title;
+        $('#titleInput').value =
+            current.title;
 
         editor.setValue(current.content);
 
         lastSnapshot = current.content;
+
         dirty = false;
 
         await loadVersions();
@@ -558,12 +679,14 @@ $('#shareForm').addEventListener(
         }
 
         try {
-            const login = formData(e.target).login;
+            const login =
+                formData(e.target).login;
 
-            const data = await api.shareDocument(
-                current.id,
-                login
-            );
+            const data =
+                await api.shareDocument(
+                    current.id,
+                    login
+                );
 
             e.target.reset();
 
@@ -591,10 +714,11 @@ $('#sharedUsersList').addEventListener(
             return;
         }
 
-        const data = await api.unshareDocument(
-            current.id,
-            button.dataset.unshareId
-        );
+        const data =
+            await api.unshareDocument(
+                current.id,
+                button.dataset.unshareId
+            );
 
         renderSharedUsers(data.sharedUsers);
 
@@ -609,9 +733,7 @@ $('#usersList').addEventListener(
             '[data-admin-id]'
         );
 
-        if (!button) {
-            return;
-        }
+        if (!button) return;
 
         await api.makeAdmin(
             button.dataset.adminId

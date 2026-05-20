@@ -18,10 +18,9 @@ export class MarkdownEditor {
 
         this.render = debounce(() => this.renderNow(), 300);
 
-        textarea.addEventListener('input', () => {
+        this.textarea.addEventListener('input', () => {
             this.render();
-
-            this.onChange?.(textarea.value);
+            this.onChange?.(this.textarea.value);
         });
     }
 

@@ -29,18 +29,18 @@ export function renderDocs(
     container.innerHTML = '';
 
     docs.forEach((doc) => {
-        const button = document.createElement('button');
+        const button =
+            document.createElement('button');
 
         button.className =
             'list-group-item list-group-item-action' +
-            (doc.id === currentId
-                ? ' active'
-                : '');
+            (doc.id === currentId ? ' active' : '');
 
         button.dataset.id = doc.id;
 
         button.innerHTML = `
-      <strong>${doc.title}</strong><br>
+      <strong>${doc.title}</strong>
+      <br>
       <small class="text-muted">
         ${new Date(doc.updated_at).toLocaleString()}
       </small>

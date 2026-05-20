@@ -18,11 +18,9 @@ export class ApiClient {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...(this.token
-                    ? { Authorization: `Bearer ${this.token}` }
-                    : {}),
-                ...(options.headers || {})
-            }
+                ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+                ...(options.headers || {}),
+            },
         });
 
         const data = await response.json().catch(() => ({}));
@@ -37,14 +35,14 @@ export class ApiClient {
     login(body) {
         return this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
         });
     }
 
     register(body) {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
         });
     }
 
@@ -58,7 +56,7 @@ export class ApiClient {
 
     makeAdmin(id) {
         return this.request(`/users/${id}/admin`, {
-            method: 'POST'
+            method: 'POST',
         });
     }
 
@@ -69,7 +67,7 @@ export class ApiClient {
     createDocument(title) {
         return this.request('/documents', {
             method: 'POST',
-            body: JSON.stringify({ title })
+            body: JSON.stringify({ title }),
         });
     }
 
@@ -80,13 +78,13 @@ export class ApiClient {
     saveDocument(id, doc) {
         return this.request(`/documents/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(doc)
+            body: JSON.stringify(doc),
         });
     }
 
     deleteDocument(id) {
         return this.request(`/documents/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
         });
     }
 
@@ -95,24 +93,21 @@ export class ApiClient {
     }
 
     restoreVersion(id, versionId) {
-        return this.request(
-            `/documents/${id}/versions/${versionId}/restore`,
-            {
-                method: 'POST'
-            }
-        );
+        return this.request(`/documents/${id}/versions/${versionId}/restore`, {
+            method: 'POST',
+        });
     }
 
     shareDocument(id, login) {
         return this.request(`/documents/${id}/share`, {
             method: 'POST',
-            body: JSON.stringify({ login })
+            body: JSON.stringify({ login }),
         });
     }
 
     unshareDocument(id, userId) {
         return this.request(`/documents/${id}/share/${userId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
         });
     }
 }

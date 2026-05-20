@@ -8,21 +8,31 @@ export class RealtimeSocket {
         this.onRemoteEdit = null;
         this.onPresence = null;
         this.onStatus = null;
+        this.onOfflineEdit = null;
 
-        this.silent = false;
+        this.reconnectTimer = null;
+        this.reconnectAttempts = 0;
+
+        this.manualClose = false;
+        this.offlineNotified = false;
     }
 
     connect() {
-        if (!this.api.token) {
+        if (!this.api.token) return;
+
+        this.manualClose = false;
+
+        if (
+            this.ws &&
+            [WebSocket.OPEN, WebSocket.CONNECTING].includes(
+                this.ws.readyState
+            )
+        ) {
             return;
         }
 
-        this.close();
-
         const protocol =
-            location.protocol === 'https:'
-                ? 'wss'
-                : 'ws';
+            location.protocol === 'https:' ? 'wss' : 'ws';
 
         this.ws = new WebSocket(
             `${protocol}://${location.host}?token=${encodeURIComponent(
@@ -30,55 +40,70 @@ export class RealtimeSocket {
             )}`
         );
 
-        this.ws.addEventListener(
-            'open',
-            () => {
-                this.onStatus?.('online');
+        this.ws.addEventListener('open', () => {
+            this.reconnectAttempts = 0;
+            this.offlineNotified = false;
 
-                if (this.documentId) {
-                    this.join(this.documentId);
-                }
+            this.onStatus?.('online');
+
+            if (this.documentId) {
+                this.join(this.documentId);
             }
+        });
+
+        this.ws.addEventListener('close', () => {
+            this.ws = null;
+
+            this.onStatus?.('offline');
+
+            if (!this.manualClose) {
+                this.scheduleReconnect();
+            }
+        });
+
+        this.ws.addEventListener('error', () => {
+            this.onStatus?.('offline');
+        });
+
+        this.ws.addEventListener('message', (event) => {
+            const message = JSON.parse(event.data);
+
+            if (message.type === 'edit') {
+                this.onRemoteEdit?.(
+                    message.content,
+                    message.user
+                );
+            }
+
+            if (message.type === 'presence') {
+                this.onPresence?.(message.users || []);
+            }
+        });
+    }
+
+    scheduleReconnect() {
+        clearTimeout(this.reconnectTimer);
+
+        const delay = Math.min(
+            30_000,
+            1_000 * 2 ** this.reconnectAttempts
         );
 
-        this.ws.addEventListener(
-            'close',
-            () => {
-                this.onStatus?.('offline');
-            }
-        );
+        this.reconnectAttempts += 1;
 
-        this.ws.addEventListener(
-            'message',
-            (e) => {
-                const msg = JSON.parse(e.data);
-
-                if (msg.type === 'edit') {
-                    this.onRemoteEdit?.(
-                        msg.content,
-                        msg.user
-                    );
-                }
-
-                if (msg.type === 'presence') {
-                    this.onPresence?.(
-                        msg.users || []
-                    );
-                }
-            }
-        );
+        this.reconnectTimer = setTimeout(() => {
+            this.connect();
+        }, delay);
     }
 
     join(documentId) {
         this.documentId = documentId;
 
-        if (
-            this.ws?.readyState === WebSocket.OPEN
-        ) {
+        if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(
                 JSON.stringify({
                     type: 'join',
-                    documentId
+                    documentId,
                 })
             );
         }
@@ -92,13 +117,26 @@ export class RealtimeSocket {
             this.ws.send(
                 JSON.stringify({
                     type: 'edit',
-                    content
+                    content,
                 })
             );
+
+            return true;
         }
+
+        this.onOfflineEdit?.(
+            this.documentId,
+            content
+        );
+
+        return false;
     }
 
     close() {
+        this.manualClose = true;
+
+        clearTimeout(this.reconnectTimer);
+
         if (this.ws) {
             this.ws.close();
             this.ws = null;

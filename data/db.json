@@ -22,133 +22,224 @@
       "id": "6e93bbff-c580-4b6e-a188-bac79a51253a",
       "owner_id": "u-student",
       "title": "Udostępnianie",
-      "content": "Test \nddfd",
+      "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafdsaddf",
       "shared_with": [
         "u-admin"
       ],
       "versions": [
         {
-          "id": "4930e367-a492-4feb-884f-cd812d1537aa",
+          "id": "eb9d9220-5663-4d87-9f26-a2bbfe6da029",
           "title": "Udostępnianie",
-          "content": "Test \nddfd",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafdsaddf",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:25.381Z"
+          "created_at": "2026-05-19T15:35:04.155Z"
         },
         {
-          "id": "59cd86d2-ce97-4a69-8c7c-c174e89c9277",
+          "id": "b0517ec4-1ec5-4a06-80c7-f653df0c88f9",
           "title": "Udostępnianie",
-          "content": "Test \nddf",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafdsadd",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:25.093Z"
+          "created_at": "2026-05-19T15:35:04.088Z"
         },
         {
-          "id": "4e8d7fef-ee74-4938-9f1f-cb0ae8a52ca8",
+          "id": "c5451fae-d91f-41c7-9517-54cb723bde97",
           "title": "Udostępnianie",
-          "content": "Test \ndd",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafdsad",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:25.070Z"
+          "created_at": "2026-05-19T15:35:03.995Z"
         },
         {
-          "id": "66c0dab9-1b54-493c-ab1f-65412623d544",
+          "id": "e883ea83-efd2-4ded-9c38-e385c6932cf6",
           "title": "Udostępnianie",
-          "content": "Test \nd",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafdsa",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:24.474Z"
+          "created_at": "2026-05-19T15:35:03.988Z"
         },
         {
-          "id": "368f1f7f-878d-48de-a720-a2835b1438dc",
+          "id": "6bd60b6b-564f-435c-bf3b-6ba6cfb2a2ca",
           "title": "Udostępnianie",
-          "content": "Test \n",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafds",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:24.135Z"
+          "created_at": "2026-05-19T15:35:03.972Z"
         },
         {
-          "id": "722a24e6-5393-43d5-8d69-73ff23c7063e",
+          "id": "3c9a660d-f37c-40e9-a02a-1177deb2f785",
           "title": "Udostępnianie",
-          "content": "Test ",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsafd",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:15.089Z"
+          "created_at": "2026-05-19T15:35:03.905Z"
         },
         {
-          "id": "09407299-b969-464a-93f9-1d5442d3a0e6",
+          "id": "ebff6361-a2c7-42ac-aed0-167d9608489a",
           "title": "Udostępnianie",
-          "content": "Test",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsaf",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:14.846Z"
+          "created_at": "2026-05-19T15:35:03.778Z"
         },
         {
-          "id": "fc5b0e64-ebb8-47b6-81e7-f23f6ba04321",
+          "id": "238b451f-dde0-486b-bd60-aeac74e94496",
           "title": "Udostępnianie",
-          "content": "Tes",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\nsa",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:14.696Z"
+          "created_at": "2026-05-19T15:35:03.669Z"
         },
         {
-          "id": "a17b097b-ef2c-41ea-92b3-e008b8765567",
+          "id": "e7d1aa74-98df-45bc-8526-e3a9ba81ebfc",
           "title": "Udostępnianie",
-          "content": "Te",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\ns",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:14.469Z"
+          "created_at": "2026-05-19T15:35:03.633Z"
         },
         {
-          "id": "7521e7a7-bf8b-40ea-84e5-b820882689eb",
+          "id": "6aaa6aa9-e14d-4788-b7aa-461a7f6cbd4b",
           "title": "Udostępnianie",
-          "content": "T",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas\n",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:14.211Z"
+          "created_at": "2026-05-19T15:35:03.457Z"
         },
         {
-          "id": "79c780bb-a5c1-4cc2-80d8-9c9ca56c8786",
+          "id": "9c5c12a1-fedc-4c64-ab34-fd4aa3241be4",
           "title": "Udostępnianie",
-          "content": "dzięki",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsadas",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:03.491Z"
+          "created_at": "2026-05-19T15:35:00.845Z"
         },
         {
-          "id": "91a57821-719a-4d20-8cce-916c13bf8746",
+          "id": "9dcac006-3b8b-4dfa-8d77-a2da5c029381",
           "title": "Udostępnianie",
-          "content": "dzięk",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsada",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:03.348Z"
+          "created_at": "2026-05-19T15:35:00.843Z"
         },
         {
-          "id": "825177f4-d768-4017-a6c5-8f9ddadde563",
+          "id": "edd8b1a6-b3bd-4448-8e56-30e3a4c1e783",
           "title": "Udostępnianie",
-          "content": "dzię",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsad",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:03.184Z"
+          "created_at": "2026-05-19T15:35:00.640Z"
         },
         {
-          "id": "13c1668a-604a-43be-87eb-62e37afec474",
+          "id": "d60375aa-c786-47bb-b6e0-1cc4ea5d3403",
           "title": "Udostępnianie",
-          "content": "dzi",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsdsa",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:02.907Z"
+          "created_at": "2026-05-19T15:35:00.488Z"
         },
         {
-          "id": "2aa1c380-6b47-42e3-ab31-abae7c8a7031",
+          "id": "ca52b37e-f2f9-4e70-8ec0-0d6d25b19f4b",
           "title": "Udostępnianie",
-          "content": "dz",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsds",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:02.770Z"
+          "created_at": "2026-05-19T15:35:00.456Z"
         },
         {
-          "id": "dde7b13c-aef6-4141-9644-d386f70bc607",
+          "id": "090ee571-b538-4e31-a8a5-f07749637da2",
           "title": "Udostępnianie",
-          "content": "d",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\nsd",
           "label": "edycja realtime",
-          "created_at": "2026-05-19T13:34:02.425Z"
+          "created_at": "2026-05-19T15:35:00.290Z"
         },
         {
-          "id": "c6ff3dd9-df08-471a-a0d8-3970b39c3424",
+          "id": "4cbaa12a-9097-458b-931b-d74a0c0e8397",
           "title": "Udostępnianie",
-          "content": "",
-          "label": "utworzenie",
-          "created_at": "2026-05-19T13:33:24.864Z"
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\ns",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:35:00.107Z"
+        },
+        {
+          "id": "d1985ea6-acee-4f9e-87fe-8e2ca73c14d7",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda\n",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:59.210Z"
+        },
+        {
+          "id": "b6b22ea6-07a9-4d9d-82ce-59c7dbd21e2d",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafda",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.740Z"
+        },
+        {
+          "id": "4c9fc767-ba75-4533-89ff-a2194711404b",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsafd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.706Z"
+        },
+        {
+          "id": "7e1a2fbd-2534-4b3e-aa4a-f803cab8fac7",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsaf",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.522Z"
+        },
+        {
+          "id": "a4014c96-ac4c-4e00-91d9-4c6097ba29a9",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfdsa",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.371Z"
+        },
+        {
+          "id": "1e66bec8-2b94-4d38-8ec3-83983e8a7488",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfds",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.362Z"
+        },
+        {
+          "id": "d9b96608-4d4c-4d32-aaea-95d96bf20d6a",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsfd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.206Z"
+        },
+        {
+          "id": "60eb8061-8148-4cb4-9864-7b6400af78c3",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsdsf",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.205Z"
+        },
+        {
+          "id": "8ebc35df-ae9b-4371-98a6-f3d9dbcbc122",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsds",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:54.052Z"
+        },
+        {
+          "id": "adca82ef-2481-4912-b3c6-e78169983b34",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfsd",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:49.312Z"
+        },
+        {
+          "id": "7014409f-9072-45ce-b940-1135e9bd8630",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsfs",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:49.310Z"
+        },
+        {
+          "id": "61ba215f-a2c7-4a56-8e49-17d08228ce6d",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfdsf",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:49.108Z"
+        },
+        {
+          "id": "6178507c-b9fb-411b-a004-8de581329e2e",
+          "title": "Udostępnianie",
+          "content": "Test \nddfd\n\ndsfds",
+          "label": "edycja realtime",
+          "created_at": "2026-05-19T15:34:48.990Z"
         }
       ],
       "created_at": "2026-05-19T13:33:24.864Z",
-      "updated_at": "2026-05-19T13:34:39.483Z"
+      "updated_at": "2026-05-19T15:35:04.155Z"
     },
     {
       "id": "52095086-fcde-4fdc-9a39-2f4e194c6e10",
