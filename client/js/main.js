@@ -150,3 +150,33 @@ if (storage.token && storage.user) {
     // Brak sesji – wyświetlenie formularza autoryzacji na starcie
     ui.showAuth();
 }
+// Natychmiastowa reakcja interfejsu na fizyczne odłączenie przewodu sieciowego / Wi-Fi
+window.addEventListener('offline', () => {
+    // 1. Zmień stan w UI na offline
+    ui.status('offline', 'secondary');
+    ui.toast('Wykryto brak połączenia sieciowego. Przejście w tryb offline.', 'warning');
+});
+
+// Reakcja na powrót sieci i PEŁNĄ synchronizację gniazda wraz z pokojem
+window.addEventListener('online', () => {
+    ui.toast('Połączenie sieciowe przywrócone. Rekonstrukcja sesji...', 'success');
+
+    // Sprawdź, czy użytkownik miał otwarty jakikolwiek dokument przed rozłączeniem
+    if (editor && editor.currentDocumentId) {
+        // Zamiast gołego socket.connect, wywołaj pełną procedurę otwarcia dokumentu.
+        // Ona wewnętrznie połączy socket, wyśle komunikat 'join' do pokoju
+        // oraz pobierze aktualny stan tekstu z serwera (fetch/API) za pomocą Promise.all!
+        editor.openDocument(editor.currentDocumentId)
+            .then(() => {
+                ui.toast('Pomyślnie zsynchronizowano z pokojem dokumentu.', 'success');
+            })
+            .catch(err => {
+                console.error('Błąd synchronizacji po powrocie sieci:', err);
+                ui.toast('Błąd podczas odzyskiwania sesji dokumentu.', 'danger');
+            });
+    } else {
+        // Jeśli nie było otwartego dokumentu, po prostu połącz gniazdo ogólne
+        socket.connect();
+    }
+});
+
