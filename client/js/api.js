@@ -1,113 +1,77 @@
 export class ApiClient {
-    constructor() {
-        this.token = localStorage.getItem('token') || '';
-    }
+    // Inicjalizuje klienta API, przyjmując obiekt magazynu danych (np. stan aplikacji ze strukturą tokenu)
+    constructor(storage) { this.storage = storage; this.base = '/api'; }
 
-    setToken(token) {
-        this.token = token || '';
-
-        if (token) {
-            localStorage.setItem('token', token);
-        } else {
-            localStorage.removeItem('token');
-        }
-    }
-
+    // Centralna metoda wykonująca żądania HTTP, automatyzująca obsługę nagłówków i błędów
     async request(path, options = {}) {
-        const response = await fetch(`/api${path}`, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-                ...(options.headers || {}),
-            },
-        });
+        // Domyślny nagłówek dla danych w formacie JSON, rozszerzany o ewentualne niestandardowe nagłówki
+        const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
 
-        const data = await response.json().catch(() => ({}));
+        // Jeśli w magazynie znajduje się token JWT, jest on automatycznie dołączany do autoryzacji żądania
+        if (this.storage.token) headers.Authorization = `Bearer ${this.storage.token}`;
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Błąd serwera');
-        }
+        // Wykonanie niskopoziomowego zapytania fetch do serwera
+        const response = await fetch(`${this.base}${path}`, { ...options, headers });
+        const text = await response.text();
+
+        // Bezpieczne parsowanie odpowiedzi tekstowej do obiektu JSON (lub pustego obiektu, jeśli brak body)
+        const data = text ? JSON.parse(text) : {};
+
+        // Rzucenie wyjątku z komunikatem błędu z serwera lub kodem statusu HTTP w przypadku niepowodzenia
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
 
         return data;
     }
 
-    login(body) {
-        return this.request('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
-    }
+    // --- Sekcja Autoryzacji ---
 
-    register(body) {
-        return this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
-    }
+    // Autoryzuje użytkownika (login/email i hasło) i zwraca token oraz dane profilu
+    login(payload) { return this.request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }); }
 
-    me() {
-        return this.request('/me');
-    }
+    // Rejestruje nowe konto standardowego użytkownika w systemie
+    register(payload) { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }); }
 
-    users() {
-        return this.request('/users');
-    }
+    // --- Sekcja Zarządzania Dokumentami (CRUD) ---
 
-    makeAdmin(id) {
-        return this.request(`/users/${id}/admin`, {
-            method: 'POST',
-        });
-    }
+    // Pobiera listę wszystkich dokumentów, do których zalogowany użytkownik ma dostęp
+    documents() { return this.request('/documents'); }
 
-    documents() {
-        return this.request('/documents');
-    }
+    // Tworzy nowy dokument tekstowy o zadanym tytule
+    createDocument(payload) { return this.request('/documents', { method: 'POST', body: JSON.stringify(payload) }); }
 
-    createDocument(title) {
-        return this.request('/documents', {
-            method: 'POST',
-            body: JSON.stringify({ title }),
-        });
-    }
+    // Aktualizuje treść lub tytuł istniejącego dokumentu na serwerze
+    updateDocument(id, payload) { return this.request(`/documents/${id}`, { method: 'PUT', body: JSON.stringify(payload) }); }
 
-    getDocument(id) {
-        return this.request(`/documents/${id}`);
-    }
+    // Bezpowrotnie usuwa wskazany dokument z bazy danych
+    deleteDocument(id) { return this.request(`/documents/${id}`, { method: 'DELETE' }); }
 
-    saveDocument(id, doc) {
-        return this.request(`/documents/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(doc),
-        });
-    }
+    // --- Sekcja Historii Wersji ---
 
-    deleteDocument(id) {
-        return this.request(`/documents/${id}`, {
-            method: 'DELETE',
-        });
-    }
+    // Pobiera pełną listę zapisanych punktów przywracania (wersji archiwalnych) dla danego pliku
+    versions(id) { return this.request(`/documents/${id}/versions`); }
 
-    versions(id) {
-        return this.request(`/documents/${id}/versions`);
-    }
+    // Przywraca treść dokumentu do stanu ze wskazanej wersji historycznej
+    restore(id, versionId) { return this.request(`/documents/${id}/versions/${versionId}/restore`, { method: 'POST' }); }
 
-    restoreVersion(id, versionId) {
-        return this.request(`/documents/${id}/versions/${versionId}/restore`, {
-            method: 'POST',
-        });
-    }
+    // --- Sekcja Panelu Administracyjnego ---
 
-    shareDocument(id, login) {
-        return this.request(`/documents/${id}/share`, {
-            method: 'POST',
-            body: JSON.stringify({ login }),
-        });
-    }
+    // Pobiera listę wszystkich zarejestrowanych użytkowników systemu (na potrzeby selektorów lub zarządzania)
+    users() { return this.request('/users'); }
 
-    unshareDocument(id, userId) {
-        return this.request(`/documents/${id}/share/${userId}`, {
-            method: 'DELETE',
-        });
-    }
+    // Tworzy nowego użytkownika z uprawnieniami administratora (wymaga roli admina)
+    createAdmin(payload) { return this.request('/admin/users', { method: 'POST', body: JSON.stringify(payload) }); }
+
+    // Modyfikuje rolę określonego użytkownika (np. nadanie lub odebranie uprawnień admina)
+    setUserRole(id, role) { return this.request(`/admin/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }); }
+
+    // --- Sekcja Kontroli Dostępu (ACL) ---
+
+    // Pobiera listę osób posiadających nadane uprawnienia współdzielenia do wskazanego dokumentu
+    access(id) { return this.request(`/documents/${id}/access`); }
+
+    // Nadaje wybranemu użytkownikowi prawa dostępu do dokumentu
+    grantAccess(id, userId) { return this.request(`/documents/${id}/access`, { method: 'POST', body: JSON.stringify({ userId }) }); }
+
+    // Cofa uprawnienia dostępu do dokumentu wybranemu użytkownikowi
+    revokeAccess(id, userId) { return this.request(`/documents/${id}/access/${userId}`, { method: 'DELETE' }); }
 }

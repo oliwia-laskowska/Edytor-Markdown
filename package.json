@@ -1,1 +1,27 @@
-{"name":"markdown-collab-editor","version":"1.0.0","type":"module","scripts":{"start":"node server/index.js","dev":"node server/index.js","reset-db":"node server/reset-db.js"},"dependencies":{"bcryptjs":"^2.4.3","cors":"^2.8.6","dotenv":"^16.4.7","express":"^4.21.2","jsonwebtoken":"^9.0.2","marked":"^15.0.6","uuid":"^11.0.5","ws":"^8.18.0"}}
+{
+  "name": "markdown-collab-editor",
+  "version": "1.0.0",
+  "description": "Wieloużytkownikowy edytor Markdown z synchronizacją WebSocket, historią wersji i offline queue.",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "reset-db": "node server/reset-db.js"
+  },
+  "keywords": ["markdown", "websocket", "collaboration", "ot", "json-db"],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^15.0.7",
+    "nanoid": "^5.0.9",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

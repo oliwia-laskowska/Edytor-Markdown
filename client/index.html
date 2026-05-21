@@ -2,335 +2,163 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8" />
-
-    <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-    />
-
-    <title>Markdown</title>
-
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
-
-    <link
-            rel="stylesheet"
-            href="css/styles.css"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kolaboracyjny Edytor Markdown</title>
+    <!-- Główne style frameworka Bootstrap (UI i układ siatki) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Dedykowane style aplikacji (warstwy kursorów, układ edytora) -->
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
-
 <body>
-<header class="navbar bg-dark navbar-dark px-3">
-      <span class="navbar-brand">
-        Markdown Editor
-      </span>
-
-    <span
-            id="connectionBadge"
-            class="badge text-bg-secondary ms-2"
-    >
-        offline
-      </span>
-
-    <span
-            id="currentUser"
-            class="text-light small ms-auto me-2"
-    ></span>
-
-    <button
-            id="logoutBtn"
-            class="btn btn-outline-light btn-sm d-none"
-    >
-        Wyloguj
-    </button>
+<!-- Górny pasek nawigacji z informacjami o sesji i stanie połączenia WebSocket -->
+<header class="navbar navbar-expand-lg bg-dark navbar-dark px-3">
+    <a class="navbar-brand fw-bold" href="#">Markdown Collab</a>
+    <!-- Odznaka (badge) reprezentująca status połączenia z serwerem WS -->
+    <span id="connectionBadge" class="badge text-bg-secondary ms-2">offline</span>
+    <div class="ms-auto d-flex gap-2 align-items-center">
+        <!-- Dane zalogowanego użytkownika oraz przycisk wylogowania -->
+        <span id="currentUser" class="text-light small"></span>
+        <button id="logoutBtn" class="btn btn-outline-light btn-sm d-none">Wyloguj</button>
+    </div>
 </header>
 
 <main class="container-fluid py-3">
-    <section
-            id="authView"
-            class="row justify-content-center"
-    >
-        <article class="col-12 col-md-6">
+    <!-- WIDOK 1: Panel Autoryzacji (Logowanie i Rejestracja) – widoczny domyślnie -->
+    <section id="authView" class="row justify-content-center">
+        <article class="col-12 col-md-7 col-lg-5">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h1 class="h4">
-                        Logowanie / rejestracja
-                    </h1>
-
-                    <div class="btn-group w-100 mb-3">
-                        <button
-                                id="showLoginBtn"
-                                class="btn btn-primary"
-                        >
-                            Logowanie
-                        </button>
-
-                        <button
-                                id="showRegisterBtn"
-                                class="btn btn-outline-primary"
-                        >
-                            Rejestracja
-                        </button>
+                    <h1 class="h4 mb-3">Kolaboracyjny Edytor Markdown</h1>
+                    <!-- Przełącznik paneli logowania i rejestracji -->
+                    <div class="btn-group w-100 mb-3" role="group" aria-label="Przełącz panel logowania i rejestracji">
+                        <button id="showLoginBtn" type="button" class="btn btn-primary">Panel logowania</button>
+                        <button id="showRegisterBtn" type="button" class="btn btn-outline-primary">Panel rejestracji</button>
                     </div>
+                    <!-- Kontener na błędy autoryzacji zwracane z API -->
+                    <div id="authError" class="alert alert-danger d-none"></div>
 
-                    <div
-                            id="authError"
-                            class="alert alert-danger d-none"
-                    ></div>
+                    <!-- Podpanel logowania -->
+                    <section id="loginPanel">
+                        <form id="loginForm">
+                            <h2 class="h5">Logowanie</h2>
+                            <label class="form-label" for="loginInput">Login lub email</label>
+                            <input id="loginInput" class="form-control mb-2" name="login" placeholder="login lub email" required minlength="3">
+                            <label class="form-label" for="loginPassword">Hasło</label>
+                            <input id="loginPassword" class="form-control mb-2" type="password" name="password" placeholder="hasło" required minlength="6">
+                            <button class="btn btn-primary w-100">Zaloguj</button>
+                            <p class="small text-muted mt-2 mb-0">Demo: admin/Admin123! albo student/User123!</p>
+                        </form>
+                    </section>
 
-                    <form id="loginForm">
-                        <input
-                                class="form-control mb-2"
-                                name="login"
-                                placeholder="login lub email"
-                                required
-                        />
-
-                        <input
-                                class="form-control mb-2"
-                                name="password"
-                                type="password"
-                                placeholder="hasło"
-                                required
-                        />
-
-                        <button class="btn btn-primary w-100">
-                            Zaloguj
-                        </button>
-
-                        <p class="small text-muted mt-2">
-                            Demo: admin/Admin123! albo student/User123!
-                        </p>
-                    </form>
-
-                    <form
-                            id="registerForm"
-                            class="d-none"
-                    >
-                        <input
-                                class="form-control mb-2"
-                                name="username"
-                                placeholder="nazwa użytkownika"
-                                required
-                                minlength="3"
-                        />
-
-                        <input
-                                class="form-control mb-2"
-                                name="email"
-                                type="email"
-                                placeholder="email"
-                                required
-                        />
-
-                        <input
-                                class="form-control mb-2"
-                                name="password"
-                                type="password"
-                                placeholder="Min 6, duża litera, cyfra, znak specjalny"
-                                required
-                                pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}"
-                        />
-
-                        <button class="btn btn-success w-100">
-                            Zarejestruj
-                        </button>
-                    </form>
+                    <!-- Podpanel rejestracji konta (ukryty na starcie) -->
+                    <section id="registerPanel" class="d-none">
+                        <form id="registerForm">
+                            <h2 class="h5">Rejestracja</h2>
+                            <label class="form-label" for="registerUsername">Nazwa użytkownika</label>
+                            <input id="registerUsername" class="form-control mb-2" name="username" placeholder="np. oliwia" required minlength="3" maxlength="30">
+                            <label class="form-label" for="registerEmail">Email</label>
+                            <input id="registerEmail" class="form-control mb-2" type="email" name="email" placeholder="email" required>
+                            <label class="form-label" for="registerPassword">Hasło</label>
+                            <!-- Weryfikacja hasła po stronie klienta za pomocą wbudowanego wyrażenia regularnego (pattern) -->
+                            <input id="registerPassword" class="form-control mb-2" type="password" name="password" placeholder="min. 6 znaków, duża litera, cyfra, znak specjalny" required minlength="6" pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}">
+                            <div class="form-text mb-3">Hasło musi mieć minimum 6 znaków, dużą literę, cyfrę i znak specjalny.</div>
+                            <button class="btn btn-success w-100">Utwórz konto</button>
+                        </form>
+                    </section>
                 </div>
             </div>
         </article>
     </section>
 
-    <section
-            id="appView"
-            class="d-none app-grid app-grid-history"
-    >
-        <aside class="card">
-            <div class="card-body">
-                <h2 class="h5">
-                    Moje pliki
-                </h2>
-
-                <form
-                        id="newDocForm"
-                        class="input-group input-group-sm mb-3"
-                >
-                    <input
-                            name="title"
-                            class="form-control"
-                            placeholder="Nazwa pliku"
-                            required
-                            minlength="2"
-                    />
-
-                    <button class="btn btn-success">
-                        Dodaj
-                    </button>
-                </form>
-
-                <h3 class="h6">
-                    Moje pliki
-                </h3>
-
-                <div
-                        id="docsList"
-                        class="list-group small"
-                ></div>
-
-                <h3 class="h6 mt-3">
-                    Udostępnione mi
-                </h3>
-
-                <div
-                        id="sharedDocsList"
-                        class="list-group small"
-                ></div>
-
-                <h3 class="h6 mt-3">
-                    Online w pliku
-                </h3>
-
-                <ul
-                        id="onlineUsers"
-                        class="small mb-0"
-                ></ul>
+    <!-- WIDOK 2: Główny interfejs aplikacji (Ukryty domyślnie, aktywowany po zalogowaniu) -->
+    <section id="appView" class="d-none editor-grid">
+        <!-- Lewa kolumna: Lista plików, użytkownicy online i panel administracyjny -->
+        <aside class="card documents-panel">
+            <div class="card-body d-flex flex-column gap-3">
+                <!-- Tworzenie nowych dokumentów -->
+                <div>
+                    <h2 class="h5">Dokumenty</h2>
+                    <form id="newDocForm" class="input-group input-group-sm">
+                        <input name="title" class="form-control" placeholder="Nowy dokument" required minlength="2" maxlength="80">
+                        <button class="btn btn-success">+</button>
+                    </form>
+                </div>
+                <!-- Dynamicznie renderowana lista dokumentów dostępnych dla użytkownika -->
+                <div id="docsList" class="list-group small"></div>
+                <!-- Lista użytkowników WebSocket podłączonych obecnie do wybranego pokoju -->
+                <div>
+                    <h3 class="h6">Online</h3>
+                    <ul id="onlineUsers" class="list-unstyled small mb-0"></ul>
+                </div>
+                <!-- Panel zarządzania dla administratorów (widoczny tylko z rolą 'admin') -->
+                <section id="adminPanel" class="border-top pt-3 d-none">
+                    <h3 class="h6">Panel admina</h3>
+                    <form id="createAdminForm" class="small mb-3">
+                        <input class="form-control form-control-sm mb-2" name="username" placeholder="login admina" required minlength="3" maxlength="30">
+                        <input class="form-control form-control-sm mb-2" type="email" name="email" placeholder="email admina" required>
+                        <input class="form-control form-control-sm mb-2" type="password" name="password" placeholder="Admin123!" required minlength="6" pattern="(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}">
+                        <button class="btn btn-warning btn-sm w-100">Utwórz admina</button>
+                    </form>
+                    <div id="adminUsersList" class="list-group small"></div>
+                </section>
             </div>
         </aside>
 
-        <section class="card">
-            <div class="card-header d-flex gap-2">
-                <input
-                        id="titleInput"
-                        class="form-control form-control-sm"
-                        placeholder="Tytuł"
-                />
-
-                <button
-                        id="saveBtn"
-                        class="btn btn-primary btn-sm"
-                >
-                    Zapisz
-                </button>
-
-                <button
-                        id="deleteBtn"
-                        class="btn btn-outline-danger btn-sm"
-                >
-                    Usuń
-                </button>
+        <!-- Środkowa kolumna: Główny obszar roboczy edytora i podglądu -->
+        <section class="card editor-panel">
+            <!-- Pasek narzędziowy: edycja tytułu, zapis ręczny, historia lokalna oraz usuwanie -->
+            <div class="card-header d-flex gap-2 flex-wrap align-items-center">
+                <input id="titleInput" class="form-control form-control-sm flex-grow-1" placeholder="Tytuł dokumentu">
+                <button id="saveBtn" class="btn btn-primary btn-sm">Zapisz</button>
+                <button id="undoBtn" class="btn btn-outline-secondary btn-sm">Undo</button>
+                <button id="redoBtn" class="btn btn-outline-secondary btn-sm">Redo</button>
+                <button id="deleteBtn" class="btn btn-outline-danger btn-sm">Usuń</button>
             </div>
-
+            <!-- Podział edytora (split): Lewo - surowy tekst, Prawo - wyrenderowany HTML -->
             <div class="card-body editor-split">
-                <div>
-                    <label class="form-label">
-                        Markdown
-                    </label>
-
-                    <textarea
-                            id="markdownInput"
-                            class="form-control code-area"
-                    ></textarea>
+                <!-- Pole edycji tekstu z nałożoną warstwą pozycjonowania zdalnych kursorów -->
+                <div class="position-relative h-100">
+                    <label for="markdownInput" class="form-label fw-semibold">Markdown</label>
+                    <textarea id="markdownInput" class="form-control code-area" spellcheck="false" placeholder="Wybierz lub utwórz dokument"></textarea>
+                    <!-- Warstwa absolutna rysująca wskaźniki kursorów innych użytkowników (zgodnie z koordynatami tekstowymi) -->
+                    <div id="remoteCursors" class="cursor-layer"></div>
                 </div>
-
+                <!-- Kontener na wyrenderowany za pomocą Marked.js wynikowy kod HTML -->
                 <article>
-                    <h2 class="h6">
-                        Podgląd HTML
-                    </h2>
-
-                    <div
-                            id="preview"
-                            class="preview border rounded p-3 bg-white"
-                    ></div>
+                    <h2 class="h6 fw-semibold">Podgląd HTML</h2>
+                    <div id="preview" class="preview border rounded p-3 bg-white"></div>
                 </article>
             </div>
         </section>
 
-        <aside class="card">
-            <div class="card-body">
-                <section
-                        id="permissionsPanel"
-                        class="mb-3"
-                >
-                    <h2 class="h5">
-                        Dostęp
-                    </h2>
-
-                    <form
-                            id="shareForm"
-                            class="input-group input-group-sm mb-2"
-                    >
-                        <input
-                                name="login"
-                                class="form-control"
-                                placeholder="login lub email"
-                        />
-
-                        <button class="btn btn-success">
-                            Nadaj
-                        </button>
+        <!-- Prawa kolumna: Zarządzanie uprawnieniami (ACL) oraz wersjonowaniem -->
+        <aside class="card versions-panel">
+            <div class="card-body d-flex flex-column gap-3">
+                <!-- Zarządzanie współdzieleniem pliku (dostępne dla właściciela i admina) -->
+                <section>
+                    <h2 class="h5">Dostęp do pliku</h2>
+                    <form id="grantAccessForm" class="input-group input-group-sm mb-2 d-none">
+                        <select id="accessUserSelect" name="userId" class="form-select" required></select>
+                        <button class="btn btn-success">Nadaj</button>
                     </form>
-
-                    <div
-                            id="sharedUsersList"
-                            class="list-group small"
-                    ></div>
+                    <div id="accessList" class="list-group small"></div>
                 </section>
-
-                <section
-                        id="adminPanel"
-                        class="mb-3 d-none"
-                >
-                    <h2 class="h5">
-                        Panel admina
-                    </h2>
-
-                    <div
-                            id="usersList"
-                            class="list-group small"
-                    ></div>
+                <!-- Lista punktów przywracania dokumentu pobierana z serwera -->
+                <section>
+                    <h2 class="h5">Historia wersji</h2>
+                    <div id="versionsList" class="list-group small"></div>
                 </section>
-
-                <h2 class="h5">
-                    Historia wersji
-                </h2>
-
-                <div class="d-flex gap-2 mb-2">
-                    <button
-                            id="undoBtn"
-                            class="btn btn-outline-secondary btn-sm"
-                    >
-                        Undo
-                    </button>
-
-                    <button
-                            id="redoBtn"
-                            class="btn btn-outline-secondary btn-sm"
-                    >
-                        Redo
-                    </button>
-                </div>
-
-                <div
-                        id="versionsList"
-                        class="list-group small"
-                ></div>
             </div>
         </aside>
     </section>
 </main>
 
-<div
-        id="toastBox"
-        class="toast-box"
-></div>
+<!-- Miejsce na wyskakujące notyfikacje systemowe (toasty) -->
+<div id="toastBox" class="toast-box"></div>
 
+<!-- Skrypt zewnętrzny: parser zamieniający składnię Markdown na bezpieczny HTML -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-<script
-        type="module"
-        src="js/main.js"
-></script>
+<!-- Główny moduł logiki klienckiej i komunikacji WebSocket -->
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

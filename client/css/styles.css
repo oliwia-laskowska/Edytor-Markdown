@@ -1,80 +1,143 @@
+:root {
+    /* Globalny odstęp między głównymi panelami aplikacji */
+    --panel-gap: 1rem;
+}
+
 body {
-    background: #f5f7fb;
+    min-height: 100vh;
+    background: #f4f6f9;
 }
 
-.app-grid {
+/* Główny potrójny układ siatki: [Lewy panel boczny] [Główny edytor] [Prawy panel boczny] */
+/* height obliczany dynamicznie: całe okno minus wysokość paska nawigacji i marginesów */
+.editor-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 1rem;
+    grid-template-columns: 260px minmax(0, 1fr) 280px;
+    gap: var(--panel-gap);
+    height: calc(100vh - 88px);
 }
 
-.app-grid-history {
-    grid-template-columns: 260px 1fr 300px;
+/* Zapobieganie rozciąganiu się paneli poza kontener flex/grid i ukrywanie domyślnego paska przewijania kart */
+.documents-panel, .editor-panel, .versions-panel {
+    min-height: 0;
+    overflow: hidden;
 }
 
+/* Włączenie niezależnego przewijania treści (scroll) wewnątrz paneli bocznych */
+.documents-panel .card-body, .versions-panel .card-body {
+    overflow: auto;
+}
+
+/* Podział środkowego panelu na dwie równe kolumny: Kod źródłowy i Podgląd HTML */
 .editor-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    height: 70vh;
+    min-height: 0;
+    height: 100%;
 }
 
-.code-area {
-    height: 100%;
-    font-family:
-            ui-monospace,
-            SFMono-Regular,
-            Menlo,
-            monospace;
-}
-
-.preview {
-    height: 100%;
+/* Dynamiczne dopasowanie wysokości pola tekstowego i podglądu z osobnym scrollem */
+.code-area, .preview {
+    min-height: 62vh;
+    height: calc(100vh - 210px);
     overflow: auto;
 }
 
+/* Nadanie cech edytora kodu dla elementu textarea */
+.code-area {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.45;
+    resize: none; /* Blokada ręcznego rozciągania okna przez użytkownika */
+}
+
+/* Zabezpieczenie obrazków osadzonych w dokumencie Markdown przed wychodzeniem poza kontener */
+.preview img {
+    max-width: 100%;
+}
+
+/* Stylowanie bloków kodu w podglądzie HTML wygenerowanym z Markdown */
+.preview pre {
+    background: #f1f3f5;
+    padding: .75rem;
+    border-radius: .5rem;
+}
+
+/* Przezroczysta warstwa nakładana absolutnie na textarea do pozycjonowania zdalnych kursorów */
+/* pointer-events: none sprawia, że kliknięcia myszą "przelatują" przez warstwę bezpośrednio do edytora */
+.cursor-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 2rem 0 0 0;
+}
+
+/* Konstrukcja wskaźnika tekstowego i plakietki z nazwą użytkownika dla edycji wieloosobowej */
+/* Koordynaty (top, left) są wyliczane dynamicznie i wstrzykiwane przez JavaScript */
+.remote-cursor {
+    position: absolute;
+    border-left: 3px solid;
+    padding-left: 4px;
+    font-size: .75rem;
+    background: rgba(255,255,255,.9);
+    transform: translateY(-1.1rem); /* Przesunięcie etykiety z nazwą użytkownika tuż nad wskaźnik */
+}
+
+/* Kontener pozycjonujący powiadomienia typu toast w prawym dolnym rogu ekranu */
 .toast-box {
     position: fixed;
     right: 1rem;
     bottom: 1rem;
-
+    z-index: 2000;
     display: grid;
-    gap: 0.5rem;
+    gap: .5rem;
 }
 
-.toast-msg {
-    background: #212529;
+/* Wygląd pojedynczego dymku powiadomienia */
+.app-toast {
+    max-width: 360px;
+    padding: .75rem 1rem;
+    border-radius: .75rem;
     color: white;
-
-    padding: 0.75rem 1rem;
-
-    border-radius: 0.5rem;
-
-    box-shadow: 0 8px 20px #0002;
+    background: #212529;
+    box-shadow: 0 10px 25px rgba(0,0,0,.15);
 }
 
-.list-group-item.active small {
-    color: #fff !important;
+/* Korekta czytelności wyciszonego tekstu wewnątrz aktywnego elementu listy Bootstrap */
+.list-group-item.active .text-muted {
+    color: #e8f2ff !important;
 }
 
-@media (max-width: 1000px) {
-    .app-grid-history {
+/* ==========================================================================
+   Media Queries - Reguły responsywności (RWD)
+   ========================================================================== */
+
+/* Dla ekranów o szerokości 900px i mniejszych (tablety, małe laptopy) */
+/* Panele boczne i edytor przechodzą w układ pionowy (jeden pod drugim) */
+@media (max-width: 900px) {
+    .editor-grid {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 800px) {
-    .app-grid,
-    .editor-split {
-        grid-template-columns: 1fr;
-    }
-
-    .editor-split {
         height: auto;
     }
+    .editor-split {
+        grid-template-columns: 1fr;
+    }
+    .code-area, .preview {
+        min-height: 45vh;
+        height: 45vh;
+    }
+}
 
-    .code-area,
-    .preview {
-        min-height: 300px;
+/* Dla małych ekranów smartfonów (420px i mniej) */
+/* Maksymalne wykorzystanie dostępnej przestrzeni poprzez redukcję paddingów i rozciągnięcie przycisków */
+@media (max-width: 420px) {
+    main.container-fluid {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+    .card-header {
+        align-items: stretch !important;
+    }
+    .card-header button {
+        flex: 1 1 auto;
     }
 }

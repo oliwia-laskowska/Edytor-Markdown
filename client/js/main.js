@@ -1,757 +1,152 @@
+import { StorageService } from './storage.js';
 import { ApiClient } from './api.js';
-import { MarkdownEditor } from './editor.js';
-import { RealtimeSocket } from './socket.js';
-import {
-    $,
-    toast,
-    formData,
-    renderDocs,
-} from './ui.js';
+import { UI } from './ui.js';
+import { CollaborationSocket } from './socket.js';
+import { EditorController } from './editor.js';
 
-const api = new ApiClient();
-const socket = new RealtimeSocket(api);
+// Wyrażenie regularne wymuszające silne hasło: min 6 znaków, 1 duża litera, 1 cyfra, 1 znak specjalny
+const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
 
-let user = null;
-let docs = {
-    own: [],
-    shared: [],
-};
+// --- Inicjalizacja i Orkiestracja Modułów Aplikacji ---
+const storage = new StorageService();
+const api = new ApiClient(storage);
+const ui = new UI();
+const socket = new CollaborationSocket(storage, ui);
+const editor = new EditorController(api, socket, ui, storage);
 
-let current = null;
-let dirty = false;
-let applyingRemote = false;
-let canManage = false;
+// Podpięcie listenerów zdarzeń DOM w kontrolerze edytora
+editor.bind();
 
-let undoStack = [];
-let redoStack = [];
-let lastSnapshot = '';
+// --- Funkcje Pomocnicze (Helpers) ---
 
-let websocketOfflineToastShown = false;
+// Konwertuje pola formularza HTML bezpośrednio na płaski obiekt klucz-wartość (payload dla API)
+function readForm(form) { return Object.fromEntries(new FormData(form).entries()); }
 
-const offlineQueueKey = 'offline-edits-v1';
+// Weryfikuje zgodność hasła tekstowego z globalną polityką bezpieczeństwa systemu
+function validateStrongPassword(password) { return PASSWORD_RULE.test(password); }
 
-const editor = new MarkdownEditor(
-    $('#markdownInput'),
-    $('#preview')
-);
-
-function pushUndo(value) {
-    if (value !== lastSnapshot) {
-        undoStack.push(lastSnapshot);
-
-        if (undoStack.length > 50) {
-            undoStack.shift();
-        }
-
-        lastSnapshot = value;
-        redoStack = [];
-    }
+// Wyświetla błąd uwierzytelniania w dedykowanym kontenerze panelu logowania/rejestracji
+function showAuthError(message) {
+    const box = document.querySelector('#authError');
+    box.textContent = message;
+    box.classList.remove('d-none');
 }
 
-editor.onChange = (value) => {
-    dirty = true;
+// Ukrywa kontener błędów autoryzacji
+function clearAuthError() { document.querySelector('#authError').classList.add('d-none'); }
 
-    if (!applyingRemote) {
-        pushUndo(value);
-        socket.sendEdit(value);
-    }
-};
-
-socket.onStatus = (status) => {
-    $('#connectionBadge').textContent = status;
-
-    $('#connectionBadge').className =
-        'badge ms-2 ' +
-        (status === 'online'
-            ? 'text-bg-success'
-            : 'text-bg-secondary');
-
-    if (status === 'online') {
-        websocketOfflineToastShown = false;
-
-        flushOfflineQueue().catch((err) =>
-            toast(err.message)
-        );
-    } else if (
-        current &&
-        !websocketOfflineToastShown
-    ) {
-        websocketOfflineToastShown = true;
-
-        toast(
-            'WebSocket offline — zmiany będą zapisane lokalnie'
-        );
-    }
-};
-
-socket.onRemoteEdit = (content, remoteUser) => {
-    applyingRemote = true;
-
-    editor.setValue(content);
-
-    lastSnapshot = content;
-
-    applyingRemote = false;
-    dirty = false;
-
-    toast(`Zmiana od ${remoteUser.username}`);
-};
-
-socket.onPresence = (users) => {
-    $('#onlineUsers').innerHTML = '';
-
-    users.forEach((u) => {
-        const li = document.createElement('li');
-
-        li.textContent = u.username;
-
-        $('#onlineUsers').appendChild(li);
-    });
-};
-
-socket.onOfflineEdit = (documentId, content) => {
-    if (!documentId) return;
-
-    queueOfflineEdit(documentId, content);
-};
-
-function readOfflineQueue() {
+// Centralna metoda realizująca proces logowania lub rejestracji i inicjująca sesję aplikacji
+async function authenticate(action, payload) {
     try {
-        return JSON.parse(
-            localStorage.getItem(offlineQueueKey) || '[]'
-        );
-    } catch {
-        return [];
-    }
+        clearAuthError();
+        const data = await api[action](payload); // Wywołanie metody 'login' lub 'register' na kliencie API
+
+        // Zapisanie danych sesji w pamięci trwałej przeglądarki
+        storage.token = data.token;
+        storage.user = data.user;
+
+        // Przełączenie widoku interfejsu na aplikację i załadowanie dokumentów użytkownika
+        ui.showApp(data.user);
+        await editor.loadDocuments();
+    } catch (error) { showAuthError(error.message); }
 }
 
-function writeOfflineQueue(queue) {
-    localStorage.setItem(
-        offlineQueueKey,
-        JSON.stringify(queue)
-    );
-}
+// --- Obsługa Zdarzeń Przełączania Widoków Autoryzacji ---
 
-function queueOfflineEdit(documentId, content) {
-    const queue = readOfflineQueue().filter(
-        (item) => item.documentId !== documentId
-    );
+// Przełączenie interfejsu na panel logowania
+document.querySelector('#showLoginBtn').addEventListener('click', (event) => {
+    document.querySelector('#loginPanel').classList.remove('d-none');
+    document.querySelector('#registerPanel').classList.add('d-none');
 
-    queue.push({
-        documentId,
-        content,
-        title:
-            $('#titleInput').value || 'Dokument',
-        createdAt: new Date().toISOString(),
-    });
+    // Wizualna zmiana stanu przycisków (aktywacja Logowania)
+    event.currentTarget.className = 'btn btn-primary';
+    document.querySelector('#showRegisterBtn').className = 'btn btn-outline-primary';
 
-    writeOfflineQueue(queue);
-}
+    clearAuthError();
+});
 
-async function flushOfflineQueue() {
-    const queue = readOfflineQueue();
+// Przełączenie interfejsu na panel rejestracji konta
+document.querySelector('#showRegisterBtn').addEventListener('click', (event) => {
+    document.querySelector('#loginPanel').classList.add('d-none');
+    document.querySelector('#registerPanel').classList.remove('d-none');
 
-    if (!queue.length) return;
+    // Wizualna zmiana stanu przycisków (aktywacja Rejestracji)
+    event.currentTarget.className = 'btn btn-primary';
+    document.querySelector('#showLoginBtn').className = 'btn btn-outline-primary';
 
-    for (const item of queue) {
-        await api.saveDocument(item.documentId, {
-            title: item.title,
-            content: item.content,
-        });
-    }
+    clearAuthError();
+});
 
-    writeOfflineQueue([]);
+// --- Obsługa Formularzy Autoryzacyjnych i Administracyjnych ---
 
-    await loadDocs();
+// Obsługa wysyłania formularza logowania z natywną walidacją HTML5
+document.querySelector('#loginForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.checkValidity()) return form.reportValidity();
+    authenticate('login', readForm(form));
+});
 
-    toast('Zsynchronizowano zmiany offline');
-}
+// Obsługa wysyłania formularza rejestracji z dodatkową walidacją złożoności hasła w JS
+document.querySelector('#registerForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const payload = readForm(form);
+    if (!form.checkValidity()) return form.reportValidity();
+    if (!validateStrongPassword(payload.password)) return showAuthError('Hasło musi mieć minimum 6 znaków, dużą literę, cyfrę i znak specjalny.');
+    authenticate('register', payload);
+});
 
-function showAuth() {
-    $('#authView').classList.remove('d-none');
+// Tworzenie nowego konta administratora z poziomu dedykowanego panelu zarządczego
+document.querySelector('#createAdminForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const payload = readForm(form);
+    if (!form.checkValidity()) return form.reportValidity();
+    if (!validateStrongPassword(payload.password)) return ui.toast('Hasło admina musi mieć min. 6 znaków, dużą literę, cyfrę i znak specjalny.', 'danger');
+    try {
+        await api.createAdmin(payload);
+        form.reset();
+        await editor.loadUsers(); // Odświeżenie listy użytkowników w panelu admina
+        ui.toast('Utworzono admina.', 'success');
+    } catch (error) { ui.toast(error.message, 'danger'); }
+});
 
-    $('#appView').classList.add('d-none');
+// Zmiana uprawnień (roli) użytkownika z poziomu listy w panelu administratora
+document.querySelector('#adminUsersList').addEventListener('click', async (event) => {
+    const btn = event.target.closest('[data-role-user-id]');
+    if (!btn) return;
+    try {
+        await api.setUserRole(btn.dataset.roleUserId, btn.dataset.nextRole);
+        await editor.loadUsers();
+        ui.toast('Zmieniono rolę użytkownika.', 'success');
+    } catch (error) { ui.toast(error.message, 'danger'); }
+});
 
-    $('#logoutBtn').classList.add('d-none');
-
-    $('#currentUser').textContent = '';
-
+// Procedura wylogowania – czyszczenie pamięci, zamknięcie gniazda i powrót do ekranu logowania
+document.querySelector('#logoutBtn').addEventListener('click', () => {
+    storage.token = null;
+    storage.user = null;
     socket.close();
-}
+    ui.showAuth();
+});
 
-function showApp() {
-    $('#authView').classList.add('d-none');
+// --- Monitorowanie Stanu Sieci Przeglądarki (Natywne Zdarzenia Offline/Online) ---
+window.addEventListener('online', () => ui.toast('Połączenie sieciowe wróciło.', 'success'));
+window.addEventListener('offline', () => ui.toast('Brak sieci — zmiany będą buforowane lokalnie.', 'warning'));
 
-    $('#appView').classList.remove('d-none');
-
-    $('#logoutBtn').classList.remove('d-none');
-
-    $('#currentUser').textContent =
-        `${user.username} (${user.role})`;
-
-    socket.connect();
-
-    $('#adminPanel').classList.toggle(
-        'd-none',
-        user.role !== 'admin'
-    );
-}
-
-async function loadDocs() {
-    const data = await api.documents();
-
-    docs = data.documents;
-
-    renderDocs(
-        $('#docsList'),
-        docs.own,
-        current?.id
-    );
-
-    renderDocs(
-        $('#sharedDocsList'),
-        docs.shared,
-        current?.id
-    );
-}
-
-async function loadUsers() {
-    if (user?.role !== 'admin') return;
-
-    const box = $('#usersList');
-
-    box.innerHTML = '';
-
-    const data = await api.users();
-
-    data.users.forEach((u) => {
-        const row = document.createElement('div');
-
-        row.className =
-            'list-group-item d-flex justify-content-between align-items-center';
-
-        row.innerHTML = `
-      <span>
-        ${u.username}
-        <small class="text-muted">${u.role}</small>
-      </span>
-    `;
-
-        if (u.role !== 'admin') {
-            const button = document.createElement('button');
-
-            button.className =
-                'btn btn-outline-primary btn-sm';
-
-            button.textContent = 'Uczyń adminem';
-
-            button.dataset.adminId = u.id;
-
-            row.appendChild(button);
-        }
-
-        box.appendChild(row);
+// --- Inicjalny Cykl Życia (Auto-Login przy przeładowaniu strony) ---
+if (storage.token && storage.user) {
+    // Jeśli token istnieje, aplikacja od razu próbuje wejść do głównego widoku
+    ui.showApp(storage.user);
+    editor.loadDocuments().catch((error) => {
+        // W przypadku wygasłego tokenu lub błędu sesja jest czyszczona, a użytkownik cofany do logowania
+        ui.toast(error.message, 'danger');
+        storage.token = null;
+        storage.user = null;
+        ui.showAuth();
     });
+} else {
+    // Brak sesji – wyświetlenie formularza autoryzacji na starcie
+    ui.showAuth();
 }
-
-function renderSharedUsers(users = []) {
-    const box = $('#sharedUsersList');
-
-    box.innerHTML = '';
-
-    users.forEach((u) => {
-        const row = document.createElement('div');
-
-        row.className =
-            'list-group-item d-flex justify-content-between align-items-center';
-
-        row.innerHTML = `<span>${u.username}</span>`;
-
-        if (canManage) {
-            const button =
-                document.createElement('button');
-
-            button.className =
-                'btn btn-outline-danger btn-sm';
-
-            button.textContent = 'Odbierz';
-
-            button.dataset.unshareId = u.id;
-
-            row.appendChild(button);
-        }
-
-        box.appendChild(row);
-    });
-
-    $('#shareForm').classList.toggle(
-        'd-none',
-        !canManage
-    );
-}
-
-async function loadVersions() {
-    const box = $('#versionsList');
-
-    box.innerHTML = '';
-
-    if (!current) return;
-
-    const data = await api.versions(current.id);
-
-    data.versions.forEach((v) => {
-        const button =
-            document.createElement('button');
-
-        button.className =
-            'list-group-item list-group-item-action';
-
-        button.dataset.versionId = v.id;
-
-        button.innerHTML = `
-      <strong>${v.label || 'wersja'}</strong>
-      <br>
-      <span class="text-muted">
-        ${new Date(v.created_at).toLocaleString()}
-      </span>
-    `;
-
-        box.appendChild(button);
-    });
-}
-
-async function openDoc(id) {
-    if (dirty && current) {
-        await saveDoc();
-    }
-
-    const data = await api.getDocument(id);
-
-    current = data.document;
-
-    canManage = !!data.canManage;
-
-    dirty = false;
-
-    undoStack = [];
-    redoStack = [];
-
-    lastSnapshot = current.content;
-
-    $('#titleInput').value = current.title;
-
-    editor.setValue(current.content);
-
-    renderDocs(
-        $('#docsList'),
-        docs.own,
-        current.id
-    );
-
-    renderDocs(
-        $('#sharedDocsList'),
-        docs.shared,
-        current.id
-    );
-
-    socket.join(current.id);
-
-    renderSharedUsers(data.sharedUsers || []);
-
-    const local = readOfflineQueue().find(
-        (item) => item.documentId === current.id
-    );
-
-    if (
-        local &&
-        confirm(
-            'Znaleziono lokalne zmiany offline dla tego pliku. Przywrócić je w edytorze?'
-        )
-    ) {
-        editor.setValue(local.content);
-
-        dirty = true;
-
-        lastSnapshot = local.content;
-    }
-
-    await loadVersions();
-}
-
-async function saveDoc() {
-    if (!current) return;
-
-    const data = await api.saveDocument(
-        current.id,
-        {
-            title: $('#titleInput').value,
-            content: editor.getValue(),
-        }
-    );
-
-    current = data.document;
-
-    dirty = false;
-
-    lastSnapshot = current.content;
-
-    await loadDocs();
-    await loadVersions();
-
-    toast('Zapisano plik');
-}
-
-async function afterLogin(data) {
-    api.setToken(data.token);
-
-    user = data.user;
-
-    showApp();
-
-    await loadDocs();
-    await loadUsers();
-}
-
-$('#showLoginBtn').addEventListener(
-    'click',
-    () => {
-        $('#loginForm').classList.remove(
-            'd-none'
-        );
-
-        $('#registerForm').classList.add(
-            'd-none'
-        );
-    }
-);
-
-$('#showRegisterBtn').addEventListener(
-    'click',
-    () => {
-        $('#registerForm').classList.remove(
-            'd-none'
-        );
-
-        $('#loginForm').classList.add(
-            'd-none'
-        );
-    }
-);
-
-$('#loginForm').addEventListener(
-    'submit',
-    async (e) => {
-        e.preventDefault();
-
-        try {
-            await afterLogin(
-                await api.login(formData(e.target))
-            );
-        } catch (err) {
-            $('#authError').textContent =
-                err.message;
-
-            $('#authError').classList.remove(
-                'd-none'
-            );
-        }
-    }
-);
-
-$('#registerForm').addEventListener(
-    'submit',
-    async (e) => {
-        e.preventDefault();
-
-        try {
-            await afterLogin(
-                await api.register(formData(e.target))
-            );
-        } catch (err) {
-            $('#authError').textContent =
-                err.message;
-
-            $('#authError').classList.remove(
-                'd-none'
-            );
-        }
-    }
-);
-
-$('#logoutBtn').addEventListener(
-    'click',
-    () => {
-        api.setToken('');
-
-        user = null;
-        current = null;
-
-        showAuth();
-    }
-);
-
-$('#newDocForm').addEventListener(
-    'submit',
-    async (e) => {
-        e.preventDefault();
-
-        try {
-            const title = formData(e.target).title;
-
-            const data =
-                await api.createDocument(title);
-
-            e.target.reset();
-
-            await loadDocs();
-
-            await openDoc(data.document.id);
-
-            toast('Utworzono plik');
-        } catch (err) {
-            toast(err.message);
-        }
-    }
-);
-
-$('#docsList').addEventListener(
-    'click',
-    (e) => {
-        const button =
-            e.target.closest('[data-id]');
-
-        if (button) {
-            openDoc(button.dataset.id);
-        }
-    }
-);
-
-$('#sharedDocsList').addEventListener(
-    'click',
-    (e) => {
-        const button =
-            e.target.closest('[data-id]');
-
-        if (button) {
-            openDoc(button.dataset.id);
-        }
-    }
-);
-
-$('#saveBtn').addEventListener(
-    'click',
-    () => {
-        saveDoc().catch((err) =>
-            toast(err.message)
-        );
-    }
-);
-
-$('#deleteBtn').addEventListener(
-    'click',
-    async () => {
-        if (!current) return;
-
-        if (!canManage) {
-            return toast(
-                'Nie możesz usunąć tego pliku'
-            );
-        }
-
-        if (!confirm('Usunąć plik?')) {
-            return;
-        }
-
-        await api.deleteDocument(current.id);
-
-        current = null;
-        dirty = false;
-
-        websocketOfflineToastShown = false;
-
-        socket.documentId = null;
-
-        $('#titleInput').value = '';
-
-        editor.setValue('');
-
-        $('#versionsList').innerHTML = '';
-
-        $('#sharedUsersList').innerHTML = '';
-
-        await loadDocs();
-
-        toast('Usunięto plik');
-    }
-);
-
-$('#undoBtn').addEventListener(
-    'click',
-    () => {
-        if (!undoStack.length) return;
-
-        redoStack.push(editor.getValue());
-
-        const value = undoStack.pop();
-
-        applyingRemote = true;
-
-        editor.setValue(value);
-
-        applyingRemote = false;
-
-        lastSnapshot = value;
-
-        dirty = true;
-
-        socket.sendEdit(value);
-    }
-);
-
-$('#redoBtn').addEventListener(
-    'click',
-    () => {
-        if (!redoStack.length) return;
-
-        undoStack.push(editor.getValue());
-
-        const value = redoStack.pop();
-
-        applyingRemote = true;
-
-        editor.setValue(value);
-
-        applyingRemote = false;
-
-        lastSnapshot = value;
-
-        dirty = true;
-
-        socket.sendEdit(value);
-    }
-);
-
-$('#versionsList').addEventListener(
-    'click',
-    async (e) => {
-        const button = e.target.closest(
-            '[data-version-id]'
-        );
-
-        if (!button || !current) return;
-
-        if (
-            !confirm('Przywrócić tę wersję?')
-        ) {
-            return;
-        }
-
-        const data =
-            await api.restoreVersion(
-                current.id,
-                button.dataset.versionId
-            );
-
-        current = data.document;
-
-        $('#titleInput').value =
-            current.title;
-
-        editor.setValue(current.content);
-
-        lastSnapshot = current.content;
-
-        dirty = false;
-
-        await loadVersions();
-
-        toast('Przywrócono wersję');
-    }
-);
-
-$('#shareForm').addEventListener(
-    'submit',
-    async (e) => {
-        e.preventDefault();
-
-        if (!current || !canManage) {
-            return;
-        }
-
-        try {
-            const login =
-                formData(e.target).login;
-
-            const data =
-                await api.shareDocument(
-                    current.id,
-                    login
-                );
-
-            e.target.reset();
-
-            renderSharedUsers(data.sharedUsers);
-
-            toast('Nadano dostęp');
-        } catch (err) {
-            toast(err.message);
-        }
-    }
-);
-
-$('#sharedUsersList').addEventListener(
-    'click',
-    async (e) => {
-        const button = e.target.closest(
-            '[data-unshare-id]'
-        );
-
-        if (
-            !button ||
-            !current ||
-            !canManage
-        ) {
-            return;
-        }
-
-        const data =
-            await api.unshareDocument(
-                current.id,
-                button.dataset.unshareId
-            );
-
-        renderSharedUsers(data.sharedUsers);
-
-        toast('Odebrano dostęp');
-    }
-);
-
-$('#usersList').addEventListener(
-    'click',
-    async (e) => {
-        const button = e.target.closest(
-            '[data-admin-id]'
-        );
-
-        if (!button) return;
-
-        await api.makeAdmin(
-            button.dataset.adminId
-        );
-
-        await loadUsers();
-
-        toast('Użytkownik jest adminem');
-    }
-);
-
-api.me()
-    .then((data) => {
-        user = data.user;
-
-        showApp();
-
-        loadDocs();
-        loadUsers();
-    })
-    .catch(showAuth);
